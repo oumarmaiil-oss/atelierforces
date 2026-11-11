@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'Atelier des Forces 3D — Contact & À distance</title>
+<!-- Seule dépendance externe : Three.js (rendu 3D). Tout le reste est intégré au fichier. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+/* =========================================================
+   STYLE GÉNÉRAL — tableau de bord scientifique, clair, lisible au vidéoprojecteur
+   ========================================================= */
+:root{
+  --bg:#0b1120; --panel:#111827; --ink:#e5e7eb; --muted:#94a3b8; --line:#1f2a3c;
+  --accent:#818cf8; --accent-soft:#1e1b4b;
+  --red:#f87171; --red-soft:#450a0a; --blue:#60a5fa; --blue-soft:#172554;
+  --ok:#34d399; --ok-soft:#064e3b; --ko:#f87171; --ko-soft:#450a0a; --warn:#fbbf24; --warn-soft:#422006;
+  --r:12px; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.4}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+svg.ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* En-tête */
+.top{display:flex;align-items:center;gap:16px;padding:10px 18px;background:#020617;color:#fff;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;margin-right:auto}
+.brand small{display:block;font-weight:400;font-size:12px;color:#94a3b8}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--red),var(--blue));display:grid;place-items:center}
+.top .seg{background:#1e293b}
+.top .seg button{color:#cbd5e1}
+.top .seg button.on{background:#4f46e5;color:#fff}
+.gbox{display:flex;align-items:center;gap:8px;font-size:13px;color:#cbd5e1}
+.gbox select{background:#1e293b;border:1px solid #334155;color:#fff;border-radius:8px;padding:6px 8px}
+
+/* Contrôle segmenté */
+.seg{display:inline-flex;background:#1e293b;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:8px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button.on{background:#334155;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.seg.full{display:flex}.seg.full button{flex:1}
+
+/* Onglets */
+.tabs{display:flex;gap:4px;padding:8px 18px 0;background:#020617;overflow-x:auto}
+.tabs button{display:flex;align-items:center;gap:8px;border:0;background:transparent;color:#94a3b8;padding:10px 16px;border-radius:10px 10px 0 0;font-weight:600;white-space:nowrap}
+.tabs button.on{background:var(--bg);color:var(--ink)}
+
+/* Disposition simulateur */
+main{height:calc(100vh - 112px)}
+.sim{display:grid;grid-template-columns:310px 1fr;gap:12px;padding:12px;height:100%}
+.sim[hidden],.page[hidden]{display:none}
+#panel{overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:2px}
+.card{background:var(--panel);border-radius:var(--r);padding:14px;box-shadow:0 1px 2px rgba(15,23,42,.06);border:1px solid var(--line)}
+.card h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.center{display:grid;grid-template-rows:1fr 200px;gap:12px;min-height:0}
+#stage{position:relative;border-radius:var(--r);overflow:hidden;background:#0b1220;border:1px solid var(--line);min-height:280px}
+#stage canvas.three{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#stage canvas.three:active{cursor:grabbing}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.flab{position:absolute;transform:translate(-50%,-50%);font-weight:700;font-size:13px;padding:1px 6px;border-radius:6px;background:rgba(2,6,23,.82);white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.flab.red{color:var(--red)}.flab.blue{color:var(--blue)}.flab.dim{opacity:.85;font-weight:600}.flab.gray{color:#cbd5e1}
+
+/* Superpositions de la scène */
+.ov{position:absolute;background:rgba(15,23,42,.92);border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.12);font-size:13px}
+#info{top:10px;left:10px;max-width:min(430px,60%);padding:10px 12px}
+#info .t{font-weight:700;margin-bottom:3px}
+#info .d{color:#cbd5e1}
+#status{margin-top:6px;padding:6px 8px;border-radius:8px;background:var(--accent-soft);color:#c7d2fe;font-weight:600}
+#status:empty,#warn:empty{display:none}
+#warn{margin-top:6px;padding:6px 8px;border-radius:8px;background:var(--warn-soft);color:var(--warn)}
+#legend{top:10px;right:10px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;max-width:250px}
+.lg{display:flex;align-items:center;gap:8px}
+.sw{width:22px;height:5px;border-radius:3px;position:relative}
+.sw::after{content:"";position:absolute;right:-4px;top:-4px;border-left:7px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.sw.red{background:var(--red);color:var(--red)}.sw.blue{background:var(--blue);color:var(--blue)}
+#legend .sc{color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:4px;margin-top:2px}
+#viewSeg{position:absolute;right:10px;bottom:66px}
+#transport{left:50%;bottom:10px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:6px}
+.tb{display:flex;align-items:center;gap:6px;border:0;background:#1e293b;border-radius:8px;padding:8px 12px;font-weight:600}
+.tb:hover{background:#334155}
+.tb.primary{background:#4f46e5;color:#fff}.tb.primary:hover{background:#6366f1}
+.tb.on{background:#713f12;color:#fde68a}
+#readout{font-variant-numeric:tabular-nums;color:#cbd5e1;padding:0 8px;font-size:13px;white-space:nowrap}
+#noThree{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:30px;color:#cbd5e1}
+
+/* Bas de l'écran : équations + graphique */
+#bottom{display:grid;grid-template-columns:1fr 340px;gap:12px;min-height:0}
+#eqs{overflow-y:auto;padding:12px 14px}
+#eqs h3{display:flex;justify-content:space-between}
+.eq{display:grid;grid-template-columns:10px 1fr;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.eq:last-child{border-bottom:0}
+.eq .dot{width:10px;height:10px;border-radius:50%;margin-top:5px}
+.eq .dot.red{background:var(--red)}.eq .dot.blue{background:var(--blue)}.eq .dot.gray{background:#94a3b8}.eq .dot.ok{background:var(--ok)}
+.eq .f{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:16px}
+.eq .x{color:var(--muted);font-size:12.5px}
+.eqgrid{display:grid;grid-template-columns:1fr 1fr;column-gap:20px}
+.graphBox{display:flex;flex-direction:column;padding:10px 12px}
+.graphBox canvas{flex:1;width:100%;min-height:0}
+.gtitle{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+
+/* Notation vectorielle : flèche au-dessus de la lettre */
+.vec{position:relative;display:inline-block;font-style:italic;font-weight:700;padding-top:.15em}
+.vec::before{content:"";position:absolute;left:5%;right:-5%;top:.05em;border-top:1.5px solid currentColor}
+.vec::after{content:"";position:absolute;right:-10%;top:-.12em;border-left:.32em solid currentColor;border-top:.2em solid transparent;border-bottom:.2em solid transparent}
+.vec sub{font-style:normal;font-size:.7em}
+
+/* Contrôles du panneau */
+.ctrl{margin-bottom:12px}
+.ctrl:last-child{margin-bottom:0}
+.ctrl-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.ctrl-h label{font-weight:600}
+.ctrl .val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent)}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctrl select{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.hint{font-size:11.5px;color:var(--muted);margin-top:2px}
+.ctrl.locked{opacity:.55}
+.ctrl.locked input,.ctrl.locked select{pointer-events:none}
+.sitlist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.sit{text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 10px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sit:hover{border-color:#6366f1;background:#1e2440}
+.sit.on{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.badge{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:999px;background:#1e293b;color:var(--muted);white-space:nowrap}
+.badge.adv{background:#2e1065;color:#c4b5fd}
+.lock{display:flex;gap:8px;align-items:center;margin-top:10px;padding:8px 10px;background:#1a2335;border-radius:9px;font-size:12.5px;color:#a8b3c4}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:#1a2335}
+.btn.full{width:100%;justify-content:center;margin-top:8px}
+.chk{display:flex;align-items:center;gap:8px;padding:4px 0}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+.note{font-size:12.5px;color:#a8b3c4;margin:8px 0 0}
+
+/* Pages Tri et Défis */
+.page{height:100%;overflow-y:auto;padding:18px}
+.wrap{max-width:1100px;margin:0 auto}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.pagehead h2{margin:0 0 4px;font-size:22px}
+.pagehead p{margin:0;color:#a8b3c4;max-width:680px}
+.score{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:700;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+.tcard{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s,background .2s}
+.tcard .em{font-size:28px;line-height:1}
+.tcard .q{font-weight:600}
+.tcard .choices{display:flex;gap:8px;flex-wrap:wrap}
+.choice{flex:1;border:2px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 10px;font-weight:700;min-width:120px}
+.choice.c{color:var(--blue)}.choice.d{color:var(--red)}
+.choice:hover{background:#1a2335}
+.choice[disabled]{cursor:default;opacity:.55}
+.choice.picked{opacity:1;border-color:currentColor}
+.tcard.good{border-color:var(--ok);background:#052e1f}
+.tcard.bad{border-color:var(--ko);background:#2a0f14}
+.fb{font-size:13px;padding:8px 10px;border-radius:9px}
+.fb.good{background:var(--ok-soft);color:#a7f3d0}
+.fb.bad{background:var(--ko-soft);color:#fecaca}
+.fb.info{background:#1e293b;color:#cbd5e1}
+.opt{display:block;width:100%;text-align:left;border:2px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 12px;margin-bottom:6px;font-weight:600}
+.opt:hover{background:#1a2335}
+.opt.good{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--ko);background:var(--ko-soft)}
+.opt[disabled]{cursor:default}
+.dnum{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:800;margin-right:8px}
+
+@media (max-width:980px){
+  main{height:auto}
+  .sim{grid-template-columns:1fr;height:auto}
+  .center{grid-template-rows:auto auto}
+  #stage{height:60vh}
+  #bottom{grid-template-columns:1fr}
+  .graphBox{height:200px}
+  #panel{order:2;overflow:visible}
+  .eqgrid{grid-template-columns:1fr}
+  #legend{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= EN-TÊTE ======================= -->
+<header class="top">
+  <div class="brand">
+    <div class="logo"><svg class="ic" viewBox="0 0 24 24" style="color:#fff"><path d="M5 19 19 5M19 5h-6M19 5v6"/><path d="M5 5v8M5 13l-2.5-2.5M5 13l2.5-2.5"/></svg></div>
+    <div>L'Atelier des Forces 3D<small>Contact & À distance — Sciences physiques, collège · lycée</small></div>
+  </div>
+  <div class="seg" id="modeSeg">
+    <button data-mode="eleve" class="on">Mode Élève</button>
+    <button data-mode="avance">Mode Avancé</button>
+  </div>
+  <label class="gbox">Intensité de la pesanteur g
+    <select id="gSel">
+      <option value="10" selected>Terre — 10 N/kg</option>
+      <option value="9.8">Terre — 9,8 N/kg</option>
+      <option value="1.6">Lune — 1,6 N/kg</option>
+    </select>
+  </label>
+</header>
+
+<!-- ======================= ONGLETS ======================= -->
+<nav class="tabs" id="tabs">
+  <button data-tab="plan" class="on"><svg class="ic" viewBox="0 0 24 24"><path d="M3 20h18L3 8z"/><rect x="8" y="9" width="4" height="4" transform="rotate(33 10 11)"/></svg>Plan incliné</button>
+  <button data-tab="ressort"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2v3M8 5h8M8 8l8 2M8 11l8 2M8 14l8 2"/><rect x="8" y="17" width="8" height="5" rx="1"/></svg>Ressort</button>
+  <button data-tab="tri"><svg class="ic" viewBox="0 0 24 24"><path d="M3 6h7M3 12h7M3 18h7M14 6l3 3 4-5M14 15l6 6M20 15l-6 6"/></svg>Tri : contact / à distance</button>
+  <button data-tab="defis"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Défis</button>
+</nav>
+
+<main>
+  <!-- ============ SIMULATEUR (onglets Plan incliné & Ressort) ============ -->
+  <section class="sim" id="simView">
+    <aside id="panel"></aside>
+    <div class="center">
+      <div id="stage">
+        <div id="labels"></div>
+        <div class="ov" id="info"><div class="t" id="infoT"></div><div class="d" id="infoD"></div><div id="status"></div><div id="warn"></div></div>
+        <div class="ov" id="legend"></div>
+        <div class="seg ov" id="viewSeg">
+          <button data-view="3d" class="on">Vue 3D</button>
+          <button data-view="profil">Vue de profil</button>
+        </div>
+        <div class="ov" id="transport">
+          <button class="tb" id="btnReset" title="Réinitialiser"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+          <button class="tb primary" id="btnPlay"></button>
+          <button class="tb" id="btnSlow" title="Ralenti ×0,2"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></svg>×0,2</button>
+          <button class="tb" id="btnStep" title="Pas-à-pas (1 image de la chronophotographie)"><svg class="ic" viewBox="0 0 24 24"><path d="M5 4l10 8-10 8zM19 5v14"/></svg>Pas</button>
+          <span id="readout"></span>
+        </div>
+      </div>
+      <div id="bottom">
+        <div class="card" id="eqs"></div>
+        <div class="card graphBox"><div class="gtitle" id="gTitle"></div><canvas id="graph"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ATELIER DE TRI ============ -->
+  <section class="page" id="triView" hidden>
+    <div class="wrap">
+      <div class="pagehead">
+        <div><h2>Atelier de tri : contact ou à distance ?</h2>
+          <p>Pour chaque situation, identifie l'<b>auteur</b> et le <b>receveur</b> de l'action, puis décide : y a-t-il contact entre eux ? Une erreur ? Lis l'indice et réessaie.</p></div>
+        <div style="display:flex;gap:8px;align-items:center"><div class="score" id="triScore"></div><button class="btn" id="triReset">Recommencer</button></div>
+      </div>
+      <div class="grid" id="triGrid"></div>
+    </div>
+  </section>
+
+  <!-- ============ DÉFIS ============ -->
+  <section class="page" id="defisView" hidden>
+    <div class="wrap">
+      <div class="pagehead">
+        <div><h2>Défis : je prédis, puis j'observe</h2>
+          <p>Choisis ta prédiction <b>avant</b> de lancer la simulation. Puis vérifie avec « Observer dans la simulation ».</p></div>
+        <div class="score" id="defScore"></div>
+      </div>
+      <div id="defList"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+'use strict';
+/* =====================================================================
+   L'ATELIER DES FORCES 3D — Contact & À distance
+   Fichier unique. Moteur physique « maison » (pas de bibliothèque) :
+   - pas de temps fixe DT = 1 ms (ralenti et pas-à-pas exacts) ;
+   - intégration d'Euler semi-implicite (stable pour le ressort) ;
+   - frottement d'adhérence (statique) et de glissement ;
+   - roulement sans glissement de la sphère (a = 5/7·g·sin α).
+   Code couleur : ROUGE = force à distance, BLEU = force de contact.
+   ===================================================================== */
+
+/* ---------- Outils ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const rad = d => d * Math.PI / 180;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const sgn = x => (x > 0) - (x < 0);
+/** Nombre au format français (virgule décimale, vrai signe moins). */
+function fmt(x, d = 2) {
+  if (!isFinite(x)) return '—';
+  if (Math.abs(x) < 0.5 * Math.pow(10, -d)) x = 0;
+  let s = x.toFixed(d);
+  const neg = s[0] === '-'; if (neg) s = s.slice(1);
+  let [i, f] = s.split('.');
+  i = i.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return (neg ? '−' : '') + i + (f ? ',' + f : '');
+}
+/** Valeur d'une force avec un nombre de décimales adapté. */
+const fN = x => { const a = Math.abs(x); return fmt(x, a >= 100 ? 0 : a >= 10 ? 1 : 2); };
+/** Arrondit vers le haut à une valeur « ronde » (1, 2, 2,5, 5 × 10ⁿ) pour les échelles. */
+function niceCeil(x) {
+  if (x <= 0) return 1;
+  const e = Math.floor(Math.log10(x)), f = x / Math.pow(10, e);
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * Math.pow(10, e);
+}
+/** Notation vectorielle HTML (flèche au-dessus). */
+const V = (n, s) => `<span class="vec">${n}${s ? `<sub>${s}</sub>` : ''}</span>`;
+/** Petit constructeur d'éléments DOM. */
+function h(tag, props = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') e.className = v;
+    else if (k === 'html') e.innerHTML = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, '');
+    else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) { if (c == null || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(c)); }
+  return e;
+}
+const ICON = {
+  play: '<svg class="ic" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="currentColor"/></svg>',
+  pause: '<svg class="ic" viewBox="0 0 24 24"><path d="M7 4h3v16H7zM14 4h3v16h-3z" fill="currentColor"/></svg>',
+  lock: '<svg class="ic" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  edit: '<svg class="ic" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  eye: '<svg class="ic" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+};
+
+/* =====================================================================
+   DONNÉES PÉDAGOGIQUES
+   ===================================================================== */
+const L_PISTE = 25;        // longueur de la pente (m)
+const DT = 0.001;          // pas de calcul (s)
+const R_SPH = 0.4;         // rayon de la sphère (m)
+const R_ROUE = 0.32;       // rayon des roues du véhicule (m)
+const L0 = 0.40;           // longueur à vide du ressort (m) — constante affichée
+const MASS_SIZE = 0.16;    // côté de la masse accrochée au ressort (m)
+const Y_SUPPORT = 1.30;    // hauteur du support du ressort vertical (m)
+
+/* Objets du plan incliné : plages de réglage réalistes */
+const OBJ = {
+  cube:     { t: 'Cube',          mMin: 0.1, mMax: 10,   mStep: 0.1, mDef: 2,    aMax: 60, hc: 0.4,  mDig: 1 },
+  sphere:   { t: 'Sphère (bille)', mMin: 0.1, mMax: 10,   mStep: 0.1, mDef: 1,    aMax: 60, hc: R_SPH, mDig: 1 },
+  vehicule: { t: 'Véhicule',      mMin: 500, mMax: 2000, mStep: 50,  mDef: 1000, aMax: 20, hc: 0.78, mDig: 0 }
+};
+/* Surfaces : on choisit une surface concrète plutôt qu'un nombre (μ affiché en mode Avancé).
+   Simplification annoncée : coefficient d'adhérence = coefficient de glissement. */
+const SURF = {
+  solide: [
+    { id: 'aucun', t: 'Sans frottement (idéal)', mu: 0 },
+    { id: 'glace', t: 'Glace', mu: 0.05 },
+    { id: 'bois', t: 'Bois sur bois', mu: 0.30 },
+    { id: 'caout', t: 'Caoutchouc sur béton', mu: 0.70 },
+    { id: 'perso', t: 'Personnalisé', mu: null, adv: true, max: 1 }
+  ],
+  vehicule: [
+    { id: 'aucun', t: 'Sans résistance (idéal)', mu: 0 },
+    { id: 'goudron', t: 'Route goudronnée', mu: 0.02 },
+    { id: 'sable', t: 'Piste sableuse', mu: 0.10 },
+    { id: 'perso', t: 'Personnalisé', mu: null, adv: true, max: 0.3 }
+  ]
+};
+const MVT = {
+  lacher: { t: 'Lâcher sans vitesse' },
+  haut:   { t: 'Lancer vers le haut de la pente (v₀)', adv: true },
+  bas:    { t: 'Lancer vers le bas de la pente (v₀)', adv: true },
+  vcte:   { t: 'Avancer à vitesse constante', veh: true }
+};
+
+/* Situations standards (conditions des manuels, paramètres verrouillés) */
+const SIT_PLAN = [
+  { id: 'p1', t: 'Objet posé sur une table', p: { obj: 'cube', m: 2, alpha: 0, surf: 'bois', mvt: 'lacher' },
+    d: 'Un cube est posé sur un support horizontal. Deux actions s\'exercent : celle de la Terre (à distance) et celle du support (contact). Elles se compensent : le cube reste immobile.' },
+  { id: 'p2', t: 'Glissement sans frottement', p: { obj: 'cube', m: 2, alpha: 30, surf: 'aucun', mvt: 'lacher' },
+    d: 'Pente idéale, sans frottement : la réaction du plan est perpendiculaire au plan. Le poids et la réaction ne se compensent pas : le cube accélère.' },
+  { id: 'p3', t: 'Cube immobile sur une pente', p: { obj: 'cube', m: 2, alpha: 15, surf: 'bois', mvt: 'lacher' },
+    d: 'Pente en bois de 15°. Les frottements suffisent à retenir le cube : la réaction du plan s\'incline et compense exactement le poids.' },
+  { id: 'p4', t: 'Glissement freiné', p: { obj: 'cube', m: 2, alpha: 30, surf: 'bois', mvt: 'lacher' },
+    d: 'Pente en bois de 30° : trop raide pour que le cube reste immobile. Il glisse, mais les frottements le freinent : il accélère moins que sans frottement.' },
+  { id: 'p5', t: 'Bille qui roule', p: { obj: 'sphere', m: 1, alpha: 20, surf: 'bois', mvt: 'lacher' },
+    d: 'Une bille lâchée sur une pente : elle roule sans glisser. Le contact avec le plan la fait tourner.' },
+  { id: 'p6', t: 'Véhicule à vitesse constante (route idéale)', p: { obj: 'vehicule', m: 1000, alpha: 0, surf: 'aucun', mvt: 'vcte', vc: 5 },
+    d: 'Route horizontale sans aucune résistance. Le véhicule garde sa vitesse SANS force motrice : c\'est le principe d\'inertie. La piste tourne en boucle.' },
+  { id: 'p7', t: 'Véhicule qui monte une côte', p: { obj: 'vehicule', m: 1000, alpha: 8, surf: 'goudron', mvt: 'vcte', vc: 4 },
+    d: 'Le véhicule monte une côte de 8° à vitesse constante. La force motrice compense exactement le reste : la somme des forces est nulle.' },
+  { id: 'p8', t: 'Lancer vers le haut sur la glace', adv: true, p: { obj: 'cube', m: 1, alpha: 20, surf: 'glace', mvt: 'haut', v0: 6 },
+    d: 'Le cube est lancé vers le haut. Pendant la montée, le frottement est dirigé vers le bas (il s\'oppose au mouvement) ; il change de sens à la descente.' },
+  { id: 'p9', t: 'Glissement à vitesse constante', adv: true, p: { obj: 'cube', m: 2, alpha: 20, surf: 'perso', muPerso: +Math.tan(rad(20)).toFixed(3), mvt: 'bas', v0: 3 },
+    d: 'Ici μ = tan α : la composante Pₓ est exactement compensée par le frottement. Une fois lancé, le cube glisse à vitesse constante.' }
+];
+const SIT_RES = [
+  { id: 'r1', o: 'h', t: 'Ressort à vide (au repos)', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 0, damp: 'aucun' },
+    d: 'Le ressort a sa longueur à vide l₀ : il n\'est ni étiré ni comprimé. Il n\'exerce aucune force (T = 0).' },
+  { id: 'r2', o: 'h', t: 'Ressort étiré puis lâché', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 0.10, damp: 'aucun' },
+    d: 'On étire le ressort de 10 cm puis on lâche. La force de rappel ramène la masse vers la position d\'équilibre : elle oscille.' },
+  { id: 'r3', o: 'h', t: 'Ressort comprimé puis lâché', p: { kp: 'moyen', k: 50, m: 0.5, dl0: -0.08, damp: 'aucun' },
+    d: 'Ressort comprimé de 8 cm : la force de rappel pousse la masse. Elle est toujours dirigée vers la position d\'équilibre.' },
+  { id: 'r6', o: 'h', t: 'Oscillations amorties', adv: true, p: { kp: 'moyen', k: 50, m: 0.5, dl0: 0.12, damp: 'moyen' },
+    d: 'Les frottements (air, support) dissipent l\'énergie : l\'amplitude diminue jusqu\'à l\'arrêt.' },
+  { id: 'r4', o: 'v', t: 'Masse suspendue à l\'équilibre', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 'eq', damp: 'aucun' },
+    d: 'La masse est immobile : la tension du ressort compense exactement le poids. À l\'équilibre, T = P donc k·Δl = m·g.' },
+  { id: 'r5', o: 'v', t: 'Masse lâchée depuis la longueur à vide', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 0, damp: 'aucun' },
+    d: 'On accroche la masse et on la lâche sans vitesse alors que le ressort a sa longueur à vide : elle oscille autour de la position d\'équilibre.' },
+  { id: 'r7', o: 'v', t: 'Ressort souple et masse légère', p: { kp: 'souple', k: 10, m: 0.2, dl0: 0, damp: 'aucun' },
+    d: 'Un ressort souple s\'allonge beaucoup pour une petite masse : les oscillations sont lentes et amples.' }
+];
+const KPRESET = { souple: { t: 'Ressort souple — k = 10 N/m', k: 10 }, moyen: { t: 'Ressort moyen — k = 50 N/m', k: 50 }, raide: { t: 'Ressort raide — k = 200 N/m', k: 200 }, libre: { t: 'Raideur libre (5 à 300 N/m)', k: null } };
+const DAMP = { aucun: { t: 'Aucun (cas idéal)', z: 0 }, faible: { t: 'Faible', z: 0.04 }, moyen: { t: 'Moyen', z: 0.15 } };
+
+/* =====================================================================
+   ÉTAT DE L'APPLICATION
+   ===================================================================== */
+const S = {
+  mode: 'eleve', g: 10, tab: 'plan', view: '3d', running: false, slow: false,
+  show: { forces: true, valeurs: true, chrono: true, comp: true },
+  plan: { sit: 'standard', sitId: 'p2', obj: 'cube', m: 2, alpha: 30, surf: 'aucun', muPerso: 0.3, mvt: 'lacher', v0: 3, vc: 3 },
+  res: { sit: 'standard', sitId: 'r2', orient: 'h', kp: 'moyen', k: 50, m: 0.5, dl0: 0.10, damp: 'aucun' }
+};
+const isAdv = () => S.mode === 'avance';
+const PS = { t: 0, s: 3, v: 0, w: 0, th: 0, ended: false, endMsg: '', dir: 1 };   // état du plan incliné
+const RS = { t: 0, x: 0, v: 0 };                                                 // état du ressort (x = Δl)
+let warnMsg = '';
+
+function surfList() { return SURF[S.plan.obj === 'vehicule' ? 'vehicule' : 'solide']; }
+function getMu() { const s = surfList().find(x => x.id === S.plan.surf) || surfList()[0]; return s.mu === null ? S.plan.muPerso : s.mu; }
+function dampH() { const r = S.res; return 2 * DAMP[r.damp].z * Math.sqrt(r.k * r.m); }
+function dlEq() { return S.res.m * S.g / S.res.k; }
+/** Masse maximale du ressort vertical : l'allongement d'équilibre ne doit pas dépasser 25 cm. */
+function mMaxVert() { return Math.max(0.1, Math.floor((0.25 * S.res.k / S.g) / 0.05 + 1e-9) * 0.05); }
+/** Plage de l'étirement initial (m) : évite que les spires se touchent (compression ≤ 15 cm) et l'étirement > 50 cm. */
+function dlRange() {
+  if (S.res.orient === 'h') return [-0.15, 0.15];
+  return [0, Math.min(0.5, 2 * dlEq() + 0.15)];
+}
+
+/* =====================================================================
+   SCÈNE 3D (Three.js)
+   ===================================================================== */
+const HAS3D = typeof THREE !== 'undefined';
+let renderer, scene, camP, camO, planG, resG, wedgeMesh, slopeLines, angleArc, chronoG;
+const OBJ3D = {}; const RES3D = {};
+const ARW = {};   // flèches de forces
+const UPV = HAS3D ? new THREE.Vector3(0, 1, 0) : null;
+const orbit = { theta: 0.35, phi: 1.22, r: 10, orthoH: 9, target: null, want: null };
+let FR = null;    // repère de la pente (mis à jour quand α change)
+
+function init3D() {
+  const stage = $('#stage');
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.domElement.className = 'three';
+  stage.prepend(renderer.domElement);
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1220);
+  camP = new THREE.PerspectiveCamera(45, 1, 0.05, 500);
+  camO = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.05, 500);
+  orbit.target = new THREE.Vector3(); orbit.want = new THREE.Vector3();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x334155, 0.9));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.65); dl.position.set(6, 12, 9); scene.add(dl);
+
+  planG = new THREE.Group(); resG = new THREE.Group(); chronoG = new THREE.Group();
+  scene.add(planG, resG, chronoG);
+
+  // Sol général
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshLambertMaterial({ color: 0x172131 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.31; planG.add(ground);
+  const grid = new THREE.GridHelper(400, 100, 0x2b3a52, 0x1f2b3e); grid.position.y = -0.3; planG.add(grid);
+
+  buildPlanObjects();
+  makeArrows();
+  setupOrbit();
+  new ResizeObserver(resize).observe(stage);
+  resize();
+}
+
+function resize() {
+  if (!renderer) return;
+  const st = $('#stage'); const w = st.clientWidth, hh = st.clientHeight;
+  if (!w || !hh) return;
+  renderer.setSize(w, hh, false);
+  renderer.domElement.style.width = w + 'px'; renderer.domElement.style.height = hh + 'px';
+  camP.aspect = w / hh; camP.updateProjectionMatrix();
+}
+
+/* ----- Pente (prisme) : reconstruite quand α change ----- */
+function buildWedge() {
+  const al = rad(S.plan.alpha), c = Math.cos(al), sn = Math.sin(al);
+  const Lc = L_PISTE * c, hgt = L_PISTE * sn, x0 = -Lc / 2, x1 = Lc / 2;
+  FR = { al, c, sn, T: new THREE.Vector3(x0, hgt, 0), u: new THREE.Vector3(c, -sn, 0), n: new THREE.Vector3(sn, c, 0), B: new THREE.Vector3(x1, 0, 0) };
+  [wedgeMesh, slopeLines, angleArc].forEach(o => { if (o) { planG.remove(o); o.geometry.dispose(); } });
+  const sh = new THREE.Shape();
+  sh.moveTo(x0, -0.3); sh.lineTo(x1, -0.3); sh.lineTo(x1, 0); sh.lineTo(x0, hgt); sh.closePath();
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: 3, bevelEnabled: false }); geo.translate(0, 0, -1.5);
+  wedgeMesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: 0x9a7650 }));
+  planG.add(wedgeMesh);
+  // Quadrillage de la pente : un trait tous les 1 m (sert d'échelle pour les flèches)
+  const pts = []; const off = FR.n.clone().multiplyScalar(0.01);
+  for (let i = 0; i <= L_PISTE; i++) {
+    const p = FR.T.clone().addScaledVector(FR.u, i).add(off);
+    pts.push(p.x, p.y, -1.5, p.x, p.y, 1.5);
+  }
+  for (const z of [-1.5, -0.5, 0.5, 1.5]) { const a = FR.T.clone().add(off), b = FR.T.clone().addScaledVector(FR.u, L_PISTE).add(off); pts.push(a.x, a.y, z, b.x, b.y, z); }
+  const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  slopeLines = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0xf5deb3, transparent: true, opacity: 0.35 }));
+  planG.add(slopeLines);
+  // Arc de l'angle α (face avant)
+  const ap = []; const R = Math.min(4, L_PISTE * 0.18);
+  for (let i = 0; i <= 30; i++) { const t = al * i / 30; ap.push(FR.B.x - R * Math.cos(t), R * Math.sin(t), 1.52); }
+  const ag = new THREE.BufferGeometry(); ag.setAttribute('position', new THREE.Float32BufferAttribute(ap, 3));
+  angleArc = new THREE.Line(ag, new THREE.LineBasicMaterial({ color: 0xe2e8f0 }));
+  angleArc.visible = al > 0; planG.add(angleArc);
+}
+
+/* ----- Objets : cube, sphère, véhicule ----- */
+function buildPlanObjects() {
+  // Cube
+  const cube = new THREE.Group();
+  const cm = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshLambertMaterial({ color: 0xf59e0b }));
+  cm.position.y = 0.4; cube.add(cm);
+  const ce = new THREE.LineSegments(new THREE.EdgesGeometry(cm.geometry), new THREE.LineBasicMaterial({ color: 0x92400e }));
+  ce.position.y = 0.4; cube.add(ce);
+  // Sphère avec damier (pour voir la rotation)
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const x = cv.getContext('2d');
+  for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++) { x.fillStyle = (i + j) % 2 ? '#059669' : '#a7f3d0'; x.fillRect(i * 32, j * 32, 32, 32); }
+  const sphere = new THREE.Group();
+  const sm = new THREE.Mesh(new THREE.SphereGeometry(R_SPH, 32, 20), new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(cv) }));
+  sm.position.y = R_SPH; sphere.add(sm);
+  // Véhicule (repère local : contact au sol en y = 0, avant vers +x)
+  const veh = new THREE.Group(); const body = new THREE.Group(); veh.add(body);
+  const mat = c => new THREE.MeshLambertMaterial({ color: c });
+  const b1 = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.62, 1.6), mat(0xfacc15)); b1.position.set(0, 0.68, 0); body.add(b1);
+  const b2 = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.55, 1.45), mat(0xfde68a)); b2.position.set(-0.25, 1.26, 0); body.add(b2);
+  const win = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.32, 1.47), mat(0x334155)); win.position.set(-0.25, 1.3, 0); body.add(win);
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.22, 0.1, 1.62), mat(0x1d4ed8)); stripe.position.set(0, 0.62, 0); body.add(stripe);
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.3), mat(0xffffff));
+  [-0.5, 0.5].forEach(z => { const l = lamp.clone(); l.position.set(1.61, 0.75, z); body.add(l); });
+  const wheels = [];
+  const wg = new THREE.CylinderGeometry(R_ROUE, R_ROUE, 0.26, 20); wg.rotateX(Math.PI / 2);
+  for (const [px, pz] of [[1.05, 0.72], [1.05, -0.72], [-1.05, 0.72], [-1.05, -0.72]]) {
+    const w = new THREE.Group(); w.position.set(px, R_ROUE, pz);
+    w.add(new THREE.Mesh(wg, mat(0x1f2937)));
+    const sp = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.07, 0.28), mat(0x9ca3af)); w.add(sp);
+    body.add(w); wheels.push(w);
+  }
+  Object.assign(OBJ3D, { cube, sphere, vehicule: veh, sphereMesh: sm, body, wheels });
+  planG.add(cube, sphere, veh);
+}
+
+/* ----- Ressort : décor reconstruit selon l'orientation ----- */
+const Helix = HAS3D ? class extends THREE.Curve {
+  constructor(n, r) { super(); this.n = n; this.r = r; }
+  getPoint(t, target = new THREE.Vector3()) { const a = 2 * Math.PI * this.n * t; return target.set(this.r * Math.cos(a), t, this.r * Math.sin(a)); }
+} : null;
+function makeRuler(vertical) {
+  // Règle graduée en Δl (cm) : le 0 correspond à la longueur à vide l₀
+  const cv = document.createElement('canvas'); const LONG = 2048, LARG = 230;
+  cv.width = vertical ? LARG : LONG; cv.height = vertical ? LONG : LARG;
+  const x = cv.getContext('2d'); x.fillStyle = '#fffbea'; x.fillRect(0, 0, cv.width, cv.height);
+  x.strokeStyle = '#1f2937'; x.fillStyle = '#1f2937'; x.lineWidth = 3; x.font = 'bold 46px system-ui,sans-serif';
+  for (let cm = -20; cm <= 50; cm++) {
+    const p = (cm + 20) / 70 * LONG; const len = cm % 10 === 0 ? 90 : cm % 5 === 0 ? 60 : 34;
+    if (cm === 0) { x.strokeStyle = '#dc2626'; x.lineWidth = 7; } else { x.strokeStyle = '#1f2937'; x.lineWidth = 3; }
+    x.beginPath();
+    if (vertical) { x.moveTo(0, p); x.lineTo(len, p); } else { x.moveTo(p, 0); x.lineTo(p, len); }
+    x.stroke();
+    if (cm % 10 === 0 && cm > -20 && cm < 50) {
+      x.fillStyle = cm === 0 ? '#dc2626' : '#1f2937';
+      const lab = cm === 0 ? '0 (l₀)' : String(cm);
+      if (vertical) { x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText(lab, 100, p); }
+      else { x.textAlign = 'center'; x.textBaseline = 'top'; x.fillText(lab, p, 112); }
+    }
+  }
+  x.fillStyle = '#475569'; x.font = '40px system-ui,sans-serif';
+  if (vertical) { x.textAlign = 'left'; x.fillText('Δl (cm)', 60, LONG - 30); } else { x.textAlign = 'right'; x.textBaseline = 'top'; x.fillText('Δl (cm)', LONG - 20, 168); }
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+  const w = 0.7, t = 0.7 * LARG / LONG;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(vertical ? t : w, vertical ? w : t), new THREE.MeshBasicMaterial({ map: tex }));
+  return m;
+}
+function buildResScene() {
+  while (resG.children.length) { const o = resG.children.pop(); o.traverse(c => { if (c.geometry) c.geometry.dispose(); }); }
+  const mat = c => new THREE.MeshLambertMaterial({ color: c });
+  const hor = S.res.orient === 'h';
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), mat(0x172131)); floor.rotation.x = -Math.PI / 2; floor.position.y = hor ? -0.75 : 0; resG.add(floor);
+  const spring = new THREE.Mesh(new THREE.TubeGeometry(new Helix(14, 0.032), 500, 0.0045, 6, false), new THREE.MeshLambertMaterial({ color: 0xcbd5e1 }));
+  const mass = new THREE.Mesh(new THREE.BoxGeometry(MASS_SIZE, MASS_SIZE, MASS_SIZE), mat(0x7c3aed));
+  const me = new THREE.LineSegments(new THREE.EdgesGeometry(mass.geometry), new THREE.LineBasicMaterial({ color: 0x3b0764 })); mass.add(me);
+  const pointer = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.004, 0.004), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+  const ruler = makeRuler(!hor);
+  if (hor) {
+    const table = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.05, 0.42), mat(0xc8a27a)); table.position.set(0.62, -0.025, 0); resG.add(table);
+    const legG = new THREE.BoxGeometry(0.04, 0.7, 0.04);
+    for (const [lx, lz] of [[-0.08, 0.17], [-0.08, -0.17], [1.32, 0.17], [1.32, -0.17]]) { const l = new THREE.Mesh(legG, mat(0x8b6b4a)); l.position.set(lx, -0.4, lz); resG.add(l); }
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.36, 0.42), mat(0x94a3b8)); wall.position.set(-0.025, 0.18, 0); resG.add(wall);
+    spring.rotation.z = -Math.PI / 2; spring.position.set(0, MASS_SIZE / 2, 0);
+    ruler.rotation.x = -Math.PI / 2; ruler.position.set(L0 + 0.15, 0.002, 0.125);
+    pointer.scale.set(1.2, 1, 9);
+  } else {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.3), mat(0x94a3b8)); beam.position.set(0, Y_SUPPORT + 0.02, 0); resG.add(beam);
+    const pole = new THREE.Mesh(new THREE.BoxGeometry(0.04, Y_SUPPORT + 0.04, 0.04), mat(0x64748b)); pole.position.set(-0.28, (Y_SUPPORT + 0.04) / 2, -0.12); resG.add(pole);
+    spring.rotation.z = Math.PI; spring.position.set(0, Y_SUPPORT, 0);
+    ruler.position.set(0.13, Y_SUPPORT - (L0 + 0.15), 0.0);
+    pointer.scale.set(5, 1.2, 1);
+  }
+  resG.add(spring, mass, pointer, ruler);
+  Object.assign(RES3D, { spring, mass, pointer });
+}
+
+/* ----- Flèches de forces (cylindre + cône, toujours visibles) ----- */
+const CYL = HAS3D ? new THREE.CylinderGeometry(1, 1, 1, 10).translate(0, 0.5, 0) : null;
+const CONE = HAS3D ? new THREE.ConeGeometry(1, 1, 16).translate(0, 0.5, 0) : null;
+function makeArrow(key, color, faded = false) {
+  const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: faded ? 0.5 : 1, depthTest: false });
+  const g = new THREE.Group(); const shaft = new THREE.Mesh(CYL, mat), head = new THREE.Mesh(CONE, mat);
+  shaft.renderOrder = head.renderOrder = faded ? 9 : 10; g.add(shaft, head); g.visible = false; scene.add(g);
+  const lab = h('div', { class: 'flab ' + (color === 0xef4444 ? 'red' : 'blue') + (faded ? ' dim' : '') });
+  lab.style.display = 'none'; $('#labels').append(lab);
+  ARW[key] = { g, shaft, head, tip: new THREE.Vector3(), lab, html: '' };
+}
+function makeArrows() {
+  const R = 0xef4444, B = 0x3b82f6;
+  ['P'].forEach(k => makeArrow(k, R)); ['Px', 'Py'].forEach(k => { makeArrow(k, R, true); ARW[k].mid = true; });
+  ['R', 'Rn', 'f', 'F', 'T', 'fd'].forEach(k => makeArrow(k, B));
+  // Étiquettes non vectorielles (angle, Δl)
+  ARW._alpha = { lab: h('div', { class: 'flab gray' }), pos: new THREE.Vector3() };
+  ARW._dl = { lab: h('div', { class: 'flab gray' }), pos: new THREE.Vector3() };
+  $('#labels').append(ARW._alpha.lab, ARW._dl.lab);
+}
+/** Place une flèche : origine (point d'application) et vecteur (en mètres). */
+function setArrow(key, origin, vec, thick, html) {
+  const A = ARW[key]; const len = vec.length();
+  if (len < 1e-4 || !S.show.forces) { A.g.visible = false; A.on = false; return; }
+  A.g.visible = true; A.on = true;
+  A.g.position.copy(origin);
+  A.g.quaternion.setFromUnitVectors(UPV, vec.clone().divideScalar(len));
+  const hl = Math.min(thick * 6, len * 0.45), hr = thick * 2.6;
+  A.shaft.scale.set(thick, Math.max(len - hl, 1e-4), thick);
+  A.head.position.set(0, len - hl, 0); A.head.scale.set(hr, hl, hr);
+  A.tip.copy(origin).add(vec);
+  if (A.html !== html) { A.lab.innerHTML = html; A.html = html; }
+}
+function hideArrows(...keys) { keys.forEach(k => { ARW[k].g.visible = false; ARW[k].on = false; }); }
+function updateLabels() {
+  const cam = curCam(); const w = renderer.domElement.clientWidth, hh = renderer.domElement.clientHeight;
+  const v = new THREE.Vector3();
+  const place = (lab, pos, dx = 0, dy = 0) => {
+    v.copy(pos).project(cam);
+    if (v.z > 1 || v.z < -1) { lab.style.display = 'none'; return; }
+    lab.style.display = 'block';
+    lab.style.left = ((v.x + 1) / 2 * w + dx) + 'px'; lab.style.top = ((1 - v.y) / 2 * hh + dy) + 'px';
+  };
+  for (const [k, A] of Object.entries(ARW)) {
+    if (k[0] === '_') continue;
+    if (!A.on) { A.lab.style.display = 'none'; continue; }
+    // léger décalage écran dans le prolongement de la flèche
+    const o = A.g.position.clone().project(cam), t = A.tip.clone().project(cam);
+    let dx = (t.x - o.x) * w, dy = -(t.y - o.y) * hh; const L = Math.hypot(dx, dy) || 1;
+    if (A.mid) {   // composantes : étiquette au milieu, décalée sur le côté (évite les chevauchements)
+      const m = A.g.position.clone().lerp(A.tip, 0.6);
+      place(A.lab, m, -dy / L * 40, dx / L * 18);
+    } else place(A.lab, A.tip, dx / L * 22, dy / L * 16);
+  }
+  for (const k of ['_alpha', '_dl']) { const A = ARW[k]; if (A.on) place(A.lab, A.pos); else A.lab.style.display = 'none'; }
+}
+
+/* ----- Chronophotographie : positions à intervalles de temps égaux ----- */
+const chrono = { list: [], next: 0 };
+let chronoGeo = null, chronoMat = null;
+function chronoDt() { return S.tab === 'plan' ? 0.2 : 0.05; }
+function clearChrono() {
+  if (!chronoG) return;
+  chrono.list.forEach(m => chronoG.remove(m)); chrono.list = []; chrono.next = 0;
+}
+function addChrono(pos) {
+  if (!HAS3D) return;
+  if (!chronoGeo) { chronoGeo = new THREE.SphereGeometry(1, 10, 8); chronoMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc, depthTest: false, transparent: true, opacity: .8 }); }
+  const m = new THREE.Mesh(chronoGeo, chronoMat); m.renderOrder = 8;
+  const r = S.tab === 'plan' ? 0.07 : 0.008; m.scale.setScalar(r); m.position.copy(pos);
+  chronoG.add(m); chrono.list.push(m);
+  if (chrono.list.length > 300) chronoG.remove(chrono.list.shift());
+}
+
+/* ----- Caméra orbitale « maison » (souris, molette, tactile) ----- */
+function setupOrbit() {
+  const el = renderer.domElement; const ptr = new Map(); let pinch = 0;
+  el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); ptr.set(e.pointerId, { x: e.clientX, y: e.clientY }); });
+  el.addEventListener('pointermove', e => {
+    if (!ptr.has(e.pointerId)) return;
+    const p = ptr.get(e.pointerId), dx = e.clientX - p.x, dy = e.clientY - p.y;
+    p.x = e.clientX; p.y = e.clientY;
+    if (ptr.size === 1) {
+      if (S.view === '3d') { orbit.theta -= dx * 0.006; orbit.phi = clamp(orbit.phi - dy * 0.006, 0.12, 1.53); }
+    } else if (ptr.size === 2) {
+      const [a, b] = [...ptr.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch) zoom(pinch / d); pinch = d;
+    }
+  });
+  const up = e => { ptr.delete(e.pointerId); if (ptr.size < 2) pinch = 0; };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  el.addEventListener('wheel', e => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0012)); }, { passive: false });
+}
+function zoom(f) {
+  const big = S.tab === 'plan';
+  orbit.r = clamp(orbit.r * f, big ? 3 : 0.6, big ? 40 : 4);
+  orbit.orthoH = clamp(orbit.orthoH * f, big ? 3 : 0.5, big ? 40 : 3);
+}
+function curCam() { return S.view === '3d' ? camP : camO; }
+function cameraDefaults() {
+  if (S.tab === 'plan') { const veh = S.plan.obj === 'vehicule'; orbit.r = veh ? 14 : 9; orbit.orthoH = veh ? 11 : 7; orbit.theta = 0.35; orbit.phi = 1.22; }
+  else { const hor = S.res.orient === 'h'; orbit.r = hor ? 1.2 : 1.75; orbit.orthoH = hor ? 0.85 : 1.35; orbit.theta = 0.25; orbit.phi = 1.3; }
+  snapCam = true;
+}
+let snapCam = true;
+function updateCamera() {
+  if (snapCam) { orbit.target.copy(orbit.want); snapCam = false; } else orbit.target.lerp(orbit.want, 0.12);
+  const t = orbit.target;
+  if (S.view === '3d') {
+    const sp = Math.sin(orbit.phi);
+    camP.position.set(t.x + orbit.r * sp * Math.sin(orbit.theta), t.y + orbit.r * Math.cos(orbit.phi), t.z + orbit.r * sp * Math.cos(orbit.theta));
+    camP.lookAt(t);
+  } else {
+    const st = $('#stage'); const asp = st.clientWidth / Math.max(1, st.clientHeight); const hh = orbit.orthoH / 2;
+    camO.left = -hh * asp; camO.right = hh * asp; camO.top = hh; camO.bottom = -hh; camO.updateProjectionMatrix();
+    camO.position.set(t.x, t.y, t.z + 60); camO.lookAt(t);
+  }
+}
+
+/* =====================================================================
+   MOTEUR PHYSIQUE — PLAN INCLINÉ
+   Axe de la pente orienté VERS LE BAS (abscisse s, vitesse v).
+   ===================================================================== */
+/** Calcule toutes les forces et l'accélération pour l'état courant (sans le modifier). */
+function planDyn() {
+  const p = S.plan, g = S.g, m = p.m, al = rad(p.alpha), sn = Math.sin(al), cs = Math.cos(al);
+  const mu = getMu();
+  const P = m * g, Px = P * sn, Py = P * cs, Rn = Py;
+  let a = 0, fu = 0, Fu = 0, dw = 0, regime = '';
+  const v = PS.v;
+  if (p.obj === 'vehicule' && p.mvt === 'vcte') {
+    // Vitesse imposée : la force motrice compense exactement le reste (ΣF = 0)
+    fu = -sgn(v) * mu * Rn; Fu = -(Px + fu); a = 0; regime = 'vcte';
+  } else if (p.obj === 'sphere') {
+    if (mu === 0) { a = g * sn; regime = (sn === 0 && Math.abs(v) < 1e-9) ? 'repos' : 'glisse'; }
+    else if (mu >= (2 / 7) * Math.tan(al) - 1e-12) {
+      // Roulement sans glissement : frottement d'adhérence f = (2/7)·m·g·sin α vers le haut
+      a = (5 / 7) * g * sn; fu = -(2 / 7) * m * g * sn;
+      regime = (sn === 0 && Math.abs(v) < 1e-9) ? 'repos' : 'roule';
+    } else {
+      // Pente trop raide pour ce μ : la bille roule en glissant
+      const vrel = v - PS.w * R_SPH; const dir = sgn(vrel) || sgn(sn);
+      fu = -dir * mu * Rn; a = g * sn + fu / m; dw = -fu / (0.4 * m * R_SPH); regime = 'roule-glisse';
+    }
+  } else {
+    // Cube (ou véhicule en roue libre) : adhérence puis glissement
+    if (Math.abs(v) < 1e-9) {
+      if (Math.abs(Px) <= mu * Rn + 1e-9) { fu = -Px; a = 0; regime = 'repos'; }
+      else { fu = -sgn(Px) * mu * Rn; a = (Px + fu) / m; regime = 'glisse'; }
+    } else { fu = -sgn(v) * mu * Rn; a = (Px + fu) / m; regime = 'glisse'; }
+  }
+  return { P, Px, Py, Rn, fu, Fu, a, dw, mu, regime, al, sn, cs };
+}
+function margin() { return S.plan.obj === 'vehicule' ? 1.8 : 0.6; }
+function planInit() {
+  const p = S.plan, L = L_PISTE;
+  Object.assign(PS, { t: 0, v: 0, w: 0, th: 0, ended: false, endMsg: '' });
+  if (p.obj !== 'vehicule' && p.mvt === 'vcte') p.mvt = 'lacher';
+  if (p.mvt === 'vcte') { if (p.alpha === 0) { PS.s = 3; PS.v = p.vc; } else { PS.s = L - 3; PS.v = -p.vc; } }
+  else if (p.mvt === 'haut') { PS.s = L - 3; PS.v = -p.v0; }
+  else if (p.mvt === 'bas') { PS.s = 3; PS.v = p.v0; }
+  else PS.s = p.alpha === 0 ? L * 0.4 : 3;
+  if (p.obj === 'sphere' && getMu() > 0) PS.w = PS.v / R_SPH;
+  PS.dir = PS.v < 0 ? -1 : 1;
+  resetCommon();
+}
+function planStep(dt) {
+  if (PS.ended) return;
+  const d = planDyn(); const v0 = PS.v; const p = S.plan;
+  if (d.regime !== 'vcte') PS.v += d.a * dt;
+  // Le frottement ne peut pas inverser le sens du mouvement : arrêt, puis test d'adhérence
+  if (p.obj !== 'sphere' && d.regime !== 'vcte' && d.mu > 0 && v0 !== 0 && sgn(PS.v) !== sgn(v0)) PS.v = 0;
+  PS.s += PS.v * dt;
+  if (p.obj === 'sphere') {
+    if (d.regime === 'roule' || d.regime === 'repos') PS.w = PS.v / R_SPH;
+    else if (d.regime === 'roule-glisse') PS.w += d.dw * dt;
+    PS.th += PS.w * dt;
+  } else if (p.obj === 'vehicule') PS.th += PS.v / R_ROUE * dt;
+  PS.t += dt;
+  if (PS.v !== 0) PS.dir = PS.v < 0 ? -1 : 1;
+  const mg = margin(), L = L_PISTE;
+  if (p.alpha === 0) {   // piste horizontale : elle tourne en boucle (sol « infini »)
+    if (PS.s > L - mg) { PS.s -= L - 2 * mg; clearChrono(); chrono.next = PS.t; snapCam = true; }
+    else if (PS.s < mg) { PS.s += L - 2 * mg; clearChrono(); chrono.next = PS.t; snapCam = true; }
+  } else if (PS.s < mg || PS.s > L - mg) {
+    PS.s = clamp(PS.s, mg, L - mg); PS.ended = true; S.running = false;
+    PS.endMsg = PS.s <= mg + 1e-6 ? 'Sommet de la pente atteint : cliquez sur Réinitialiser.' : 'Bas de la pente atteint : cliquez sur Réinitialiser.';
+    updateTransport();
+  }
+}
+function planCenter(s) { return FR.T.clone().addScaledVector(FR.u, s).addScaledVector(FR.n, OBJ[S.plan.obj].hc); }
+function planContact(s) { return FR.T.clone().addScaledVector(FR.u, s); }
+/** Échelle des forces : 1 m (un carreau de la pente) ↔ X newtons. Référence terrestre fixe → sur la Lune les flèches raccourcissent. */
+function planScaleN() { const p = S.plan; return niceCeil(p.m * 10 / (p.obj === 'vehicule' ? 2.6 : 1.6)); }
+
+function planVisual() {
+  const p = S.plan; const d = planDyn();
+  ['cube', 'sphere', 'vehicule'].forEach(k => OBJ3D[k].visible = (k === p.obj));
+  const o = OBJ3D[p.obj]; const K = planContact(PS.s); const C = planCenter(PS.s);
+  o.position.copy(K); o.rotation.z = -FR.al;
+  if (p.obj === 'sphere') OBJ3D.sphereMesh.rotation.z = -PS.th;
+  if (p.obj === 'vehicule') { OBJ3D.body.scale.x = PS.dir; OBJ3D.wheels.forEach(w => w.rotation.z = -PS.th * PS.dir); }
+  orbit.want.copy(C);
+
+  // Flèches
+  const X = planScaleN(), k = 1 / X, th = p.obj === 'vehicule' ? 0.075 : 0.05;
+  const val = (x) => S.show.valeurs ? ` = ${fN(Math.abs(x))} N` : '';
+  const Kc = K.clone().addScaledVector(FR.n, 0.02);
+  setArrow('P', C, new THREE.Vector3(0, -d.P * k, 0), th, V('P') + val(d.P));
+  const adv = isAdv();
+  if (!adv) {
+    const R = FR.n.clone().multiplyScalar(d.Rn).addScaledVector(FR.u, d.fu);
+    setArrow('R', Kc, R.multiplyScalar(k), th, V('R') + val(Math.hypot(d.Rn, d.fu)));
+    hideArrows('Rn', 'f', 'Px', 'Py');
+  } else {
+    hideArrows('R');
+    setArrow('Rn', Kc, FR.n.clone().multiplyScalar(d.Rn * k), th, V('R', 'N') + val(d.Rn));
+    setArrow('f', Kc.clone().addScaledVector(FR.n, 0.06), FR.u.clone().multiplyScalar(d.fu * k), th, V('f') + val(d.fu));
+    if (S.show.comp) {
+      setArrow('Px', C, FR.u.clone().multiplyScalar(d.Px * k), th * 0.8, V('P', 'x') + val(d.Px));
+      setArrow('Py', C, FR.n.clone().multiplyScalar(-d.Py * k), th * 0.8, V('P', 'y') + val(d.Py));
+    } else hideArrows('Px', 'Py');
+  }
+  if (p.obj === 'vehicule' && d.regime === 'vcte') setArrow('F', Kc.clone().addScaledVector(FR.n, 0.12), FR.u.clone().multiplyScalar(d.Fu * k), th, V('F') + val(d.Fu));
+  else hideArrows('F');
+  hideArrows('T', 'fd');
+  // Étiquette de l'angle
+  const A = ARW._alpha; A.on = p.alpha > 0;
+  if (A.on) { const R = Math.min(4, L_PISTE * 0.18) + 1.1; A.pos.set(FR.B.x - R * Math.cos(FR.al / 2), R * Math.sin(FR.al / 2), 1.52); A.lab.textContent = `α = ${p.alpha}°`; }
+  ARW._dl.on = false;
+}
+
+/* =====================================================================
+   MOTEUR PHYSIQUE — RESSORT
+   x = Δl = l − l₀ (allongement). Horizontal : axe vers la droite. Vertical : axe vers le bas.
+   ===================================================================== */
+function resForces() {
+  const r = S.res, g = S.g, P = r.m * g; const hd = dampH();
+  const T = -r.k * RS.x;               // projection de la tension sur l'axe
+  const fd = -hd * RS.v;               // frottement fluide (amortissement)
+  const a = r.orient === 'h' ? (T + fd) / r.m : (P + T + fd) / r.m;
+  return { P, T, fd, a, Rn: r.orient === 'h' ? P : 0 };
+}
+function resInit() {
+  const r = S.res;
+  const [a, b] = dlRange(); r.dl0 = clamp(r.dl0, a, b);
+  Object.assign(RS, { t: 0, x: r.dl0, v: 0 });
+  resetCommon();
+}
+function resStep(dt) {
+  const f = resForces(); RS.v += f.a * dt; RS.x += RS.v * dt; RS.t += dt;
+}
+function resMassCenter() {
+  const l = L0 + RS.x;
+  return S.res.orient === 'h' ? new THREE.Vector3(l + MASS_SIZE / 2, MASS_SIZE / 2, 0) : new THREE.Vector3(0, Y_SUPPORT - l - MASS_SIZE / 2, 0);
+}
+function resScaleN() { const r = S.res; return niceCeil(Math.max(r.m * 10, r.k * 0.15, r.m * S.g) / 3.2); } // 10 cm ↔ X N
+function resVisual() {
+  const r = S.res, f = resForces(), l = L0 + RS.x, hor = r.orient === 'h';
+  RES3D.spring.scale.y = l;
+  const C = resMassCenter(); RES3D.mass.position.copy(C);
+  if (hor) RES3D.pointer.position.set(l, 0.004, 0.1);
+  else RES3D.pointer.position.set(MASS_SIZE / 2 + 0.01, Y_SUPPORT - l, 0);
+  orbit.want.copy(hor ? new THREE.Vector3(0.48, 0.1, 0) : new THREE.Vector3(0.05, Y_SUPPORT - 0.6, 0));
+  const k = 0.1 / resScaleN(), th = 0.0065;
+  const val = x => S.show.valeurs ? ` = ${fN(Math.abs(x))} N` : '';
+  hideArrows('R', 'Rn', 'f', 'F', 'Px', 'Py');
+  setArrow('P', C, new THREE.Vector3(0, -f.P * k, 0), th, V('P') + val(f.P));
+  if (hor) {
+    setArrow('Rn', new THREE.Vector3(C.x, 0.003, 0), new THREE.Vector3(0, f.Rn * k, 0), th, V('R', 'N') + val(f.Rn));
+    setArrow('T', new THREE.Vector3(l, MASS_SIZE / 2, 0), new THREE.Vector3(f.T * k, 0, 0), th, V('T') + val(f.T));
+    if (f.fd !== 0 && Math.abs(f.fd) > 1e-3) setArrow('fd', C.clone().add(new THREE.Vector3(0, 0.04, 0)), new THREE.Vector3(f.fd * k, 0, 0), th * 0.8, V('f') + val(f.fd)); else hideArrows('fd');
+  } else {
+    // Axe vertical vers le bas : T (projection) négative = tension vers le haut
+    setArrow('T', new THREE.Vector3(0, Y_SUPPORT - l, 0), new THREE.Vector3(0, -f.T * k, 0), th, V('T') + val(f.T));
+    if (Math.abs(f.fd) > 1e-3) setArrow('fd', C.clone().add(new THREE.Vector3(0.04, 0, 0)), new THREE.Vector3(0, -f.fd * k, 0), th * 0.8, V('f') + val(f.fd)); else hideArrows('fd');
+  }
+  ARW._alpha.on = false;
+  const D = ARW._dl; D.on = true; D.lab.textContent = `Δl = ${fmt(RS.x * 100, 1)} cm`;
+  if (hor) D.pos.set(l, -0.03, 0.26); else D.pos.set(0.32, Y_SUPPORT - l, 0);
+}
+
+/* =====================================================================
+   BOUCLE COMMUNE : temps, chronophotographie, graphique
+   ===================================================================== */
+const graph = { pts: [], next: 0 };
+function resetCommon() {
+  if (HAS3D) clearChrono();
+  graph.pts = []; graph.next = 0; acc = 0; snapCam = true;
+  sampleNow(true);
+}
+function simT() { return S.tab === 'plan' ? PS.t : RS.t; }
+function sampleNow(force) {
+  const t = simT();
+  if (force || t >= graph.next - 1e-9) {
+    graph.pts.push({ t, y: S.tab === 'plan' ? Math.abs(PS.v) : RS.x * 100 });
+    graph.next = t + 0.02;
+    if (graph.pts.length > 3000) graph.pts.shift();
+  }
+  if (HAS3D && (force || t >= chrono.next - 1e-9)) {
+    if (S.show.chrono) {
+      const pos = S.tab === 'plan' ? planCenter(PS.s) : resMassCenter().add(S.res.orient === 'h' ? new THREE.Vector3(0, MASS_SIZE * 0.85, 0) : new THREE.Vector3(-0.15, 0, 0));
+      if (!(S.tab === 'plan' && PS.ended && !force)) addChrono(pos);
+    }
+    chrono.next = (force ? 0 : chrono.next) + chronoDt();
+    if (chrono.next <= t) chrono.next = t + chronoDt();
+  }
+}
+function stepSim(dt) {
+  if (S.tab === 'plan') planStep(dt); else resStep(dt);
+  sampleNow(false);
+}
+let acc = 0, lastT = performance.now(), lastUI = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  let dt = (now - lastT) / 1000; lastT = now; if (dt > 0.1) dt = 0.1;
+  if (S.tab !== 'plan' && S.tab !== 'ressort') return;
+  if (S.running) {
+    acc += dt * (S.slow ? 0.2 : 1); let n = 0;
+    while (acc >= DT && n < 3000) { stepSim(DT); acc -= DT; n++; if (!S.running) { acc = 0; break; } }
+  }
+  if (HAS3D) {
+    if (S.tab === 'plan') planVisual(); else resVisual();
+    updateCamera(); renderer.render(scene, curCam()); updateLabels();
+  }
+  if (now - lastUI > 110) { lastUI = now; updateReadouts(); drawGraph(); }
+}
+
+/* ----- Graphique v(t) ou Δl(t) ----- */
+function drawGraph() {
+  const c = $('#graph'); const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = c.clientWidth, hh = c.clientHeight; if (!w || !hh) return;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(hh * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr); }
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, hh);
+  const plan = S.tab === 'plan'; const W = plan ? 10 : 5;
+  const pts = graph.pts; const tEnd = Math.max(W, pts.length ? pts[pts.length - 1].t : 0), t0 = tEnd - W;
+  let ymin = 0, ymax = plan ? 1 : 1;
+  for (const p of pts) if (p.t >= t0) { ymin = Math.min(ymin, p.y); ymax = Math.max(ymax, p.y); }
+  if (!plan) { const m = Math.max(Math.abs(ymin), Math.abs(ymax), 2); ymin = -m; ymax = m; }
+  // graduations « rondes » : pas = 1, 2, 2,5 ou 5 × 10ⁿ
+  const stepY = niceCeil((ymax - ymin) / 4) || 1;
+  ymax = Math.ceil(ymax * 1.02 / stepY) * stepY; ymin = Math.floor(ymin / stepY) * stepY; if (ymax === ymin) ymax = ymin + stepY;
+  const L = 40, R = 8, T = 8, B = 20, PW = w - L - R, PH = hh - T - B;
+  const X = t => L + (t - t0) / W * PW, Y = y => T + (1 - (y - ymin) / (ymax - ymin)) * PH;
+  x.strokeStyle = '#1f2a3c'; x.fillStyle = '#94a3b8'; x.font = '11px system-ui'; x.lineWidth = 1;
+  const dig = Number.isInteger(stepY) ? 0 : (Number.isInteger(stepY * 10) ? 1 : 2);
+  for (let yv = ymin; yv <= ymax + 1e-9; yv += stepY) { const yy = Y(yv); x.beginPath(); x.moveTo(L, yy); x.lineTo(w - R, yy); x.stroke(); x.textAlign = 'right'; x.fillText(fmt(yv, dig), L - 4, yy + 4); }
+  x.textAlign = 'center';
+  for (let s = Math.ceil(t0); s <= tEnd; s++) { const xx = X(s); x.fillText(s + ' s', xx, hh - 5); }
+  x.strokeStyle = '#475569'; x.beginPath(); x.moveTo(L, Y(0)); x.lineTo(w - R, Y(0)); x.stroke();
+  x.strokeStyle = '#a5b4fc'; x.lineWidth = 2.2; x.beginPath(); let st = false;
+  for (const p of pts) { if (p.t < t0) continue; const xx = X(p.t), yy = Y(p.y); if (!st) { x.moveTo(xx, yy); st = true; } else x.lineTo(xx, yy); }
+  x.stroke();
+}
+
+/* =====================================================================
+   AFFICHAGE : équations, informations, légende, transport
+   ===================================================================== */
+const eq = (dot, f, x) => `<div class="eq"><span class="dot ${dot}"></span><div><div class="f">${f}</div>${x ? `<div class="x">${x}</div>` : ''}</div></div>`;
+const AUT = { cube: 'le cube', sphere: 'la bille', vehicule: 'le véhicule' };
+
+function planEquations(d) {
+  const p = S.plan, g = S.g, m = p.m, o = AUT[p.obj];
+  const mS = fmt(m, OBJ[p.obj].mDig), gS = fmt(g, g === 10 ? 0 : 1);
+  const rows = [];
+  rows.push(eq('red', `${V('P')} : P = m × g = ${mS} × ${gS} = <b>${fN(d.P)} N</b>`, `Action <b>à distance</b> de la Terre sur ${o}. Verticale, vers le bas, appliquée au centre de gravité G.`));
+  if (!isAdv()) {
+    const R = Math.hypot(d.Rn, d.fu);
+    rows.push(eq('blue', `${V('R')} : R = <b>${fN(R)} N</b>`, `Action <b>de contact</b> du plan sur ${o}. ` + (Math.abs(d.fu) > 1e-9 ? 'Elle est inclinée vers l\'arrière à cause des frottements.' : 'Sans frottement, elle est perpendiculaire au plan.')));
+    if (d.regime === 'vcte') rows.push(eq('blue', `${V('F')} motrice : F = <b>${fN(Math.abs(d.Fu))} N</b>`, 'Action <b>de contact</b> de la route sur les roues motrices.' + (Math.abs(d.Fu) < 1e-9 ? ' Ici elle est nulle : rien ne freine le véhicule !' : '')));
+    let bil;
+    if (d.regime === 'repos') bil = eq('ok', `${V('P')} + ${V('R')} = ${V('0')}`, 'Les forces <b>se compensent</b> : l\'objet reste immobile.');
+    else if (d.regime === 'vcte') bil = eq('ok', `Somme des forces = ${V('0')}`, 'Les forces <b>se compensent</b> : la vitesse reste constante (principe d\'inertie).');
+    else bil = eq('gray', `Les forces ne se compensent pas`, `La vitesse de ${o} varie : il accélère ou ralentit.`);
+    rows.push(bil);
+    return `<div class="eqgrid">${rows.join('')}</div>`;
+  }
+  // ----- Mode avancé -----
+  const a = p.alpha;
+  rows.push(eq('red', `P<sub>x</sub> = P·sin α = ${fN(d.P)} × sin ${a}° = <b>${fN(d.Px)} N</b>`, 'Composante du poids parallèle à la pente (tend à faire descendre).'));
+  rows.push(eq('red', `P<sub>y</sub> = P·cos α = ${fN(d.P)} × cos ${a}° = <b>${fN(d.Py)} N</b>`, 'Composante du poids perpendiculaire à la pente.'));
+  rows.push(eq('blue', `R<sub>N</sub> = P<sub>y</sub> = <b>${fN(d.Rn)} N</b>`, 'Réaction normale du plan : pas de mouvement perpendiculaire au plan.'));
+  let fx;
+  if (d.mu === 0) fx = eq('blue', `f = 0 N`, 'Pas de frottement (cas idéal).');
+  else if (d.regime === 'repos') fx = eq('blue', `f = P<sub>x</sub> = <b>${fN(Math.abs(d.fu))} N</b> ≤ μ·R<sub>N</sub> = ${fN(d.mu * d.Rn)} N`, 'Frottement d\'adhérence : il compense Pₓ tant qu\'il ne dépasse pas μ·R<sub>N</sub>.');
+  else if (d.regime === 'roule') fx = eq('blue', `f = (2/7)·m·g·sin α = <b>${fN(Math.abs(d.fu))} N</b>`, 'Frottement d\'adhérence au point de contact : c\'est lui qui fait tourner la bille.');
+  else fx = eq('blue', `f = μ·R<sub>N</sub> = ${fmt(d.mu, 2)} × ${fN(d.Rn)} = <b>${fN(Math.abs(d.fu))} N</b>`, (p.obj === 'vehicule' ? 'Résistance au roulement' : 'Frottement de glissement') + ' : opposé au sens du mouvement.');
+  rows.push(fx);
+  if (d.regime === 'vcte') rows.push(eq('blue', `F = P<sub>x</sub> + f = <b>${fN(Math.abs(d.Fu))} N</b>`, 'Force motrice (route → roues) qui maintient la vitesse constante.'));
+  let sum;
+  if (p.obj === 'sphere' && d.regime === 'roule') sum = eq('ok', `a = (5/7)·g·sin α = <b>${fmt(d.a, 2)} m/s²</b>`, 'Roulement sans glissement : une partie de l\'énergie sert à faire tourner la bille, d\'où le facteur 5/7.');
+  else if (d.regime === 'vcte') sum = eq('ok', `Σ${V('F')} = ${V('0')} ⇒ a = 0 ⇒ v = <b>${fmt(Math.abs(PS.v), 1)} m/s</b> = constante`, 'Principe d\'inertie : forces qui se compensent ⇔ mouvement rectiligne uniforme (ou repos).');
+  else sum = eq('ok', `m·a = P<sub>x</sub> ${d.fu <= 0 ? '−' : '+'} f ⇒ a = <b>${fmt(d.a, 2)} m/s²</b>`, 'Deuxième loi de Newton projetée sur l\'axe de la pente (orienté vers le bas).');
+  rows.push(sum);
+  if (p.obj !== 'sphere' && p.mvt !== 'vcte' && p.alpha > 0 && d.mu > 0) {
+    const ta = Math.tan(d.al), ok = ta <= d.mu + 1e-9;
+    rows.push(eq(ok ? 'ok' : 'gray', `tan α = ${fmt(ta, 3)} ${ok ? '≤' : '>'} μ = ${fmt(d.mu, 3)}`, ok ? 'Condition d\'immobilité vérifiée : posé sans vitesse, l\'objet reste immobile.' : 'Condition d\'immobilité non vérifiée : l\'objet glisse.'));
+  }
+  return `<div class="eqgrid">${rows.join('')}</div>`;
+}
+function resEquations(f) {
+  const r = S.res, hor = r.orient === 'h', g = S.g;
+  const rows = [];
+  const dl = RS.x, absT = Math.abs(r.k * dl);
+  rows.push(eq('red', `${V('P')} : P = m × g = ${fmt(r.m, 2)} × ${fmt(g, g === 10 ? 0 : 1)} = <b>${fN(f.P)} N</b>`, 'Action <b>à distance</b> de la Terre sur la masse.'));
+  rows.push(eq('blue', `${V('T')} : T = k × |Δl| = ${fmt(r.k, 0)} × ${fmt(Math.abs(dl), 3)} = <b>${fN(absT)} N</b>`, 'Action <b>de contact</b> du ressort sur la masse. ' + (Math.abs(dl) < 5e-4 ? 'Ressort à vide : T = 0.' : dl > 0 ? 'Ressort étiré : il tire la masse vers lui.' : 'Ressort comprimé : il pousse la masse.')));
+  rows.push(eq('gray', `Δl = l − l₀ = ${fmt((L0 + dl) * 100, 1)} − ${fmt(L0 * 100, 0)} = <b>${fmt(dl * 100, 1)} cm</b>`, 'Allongement (Δl > 0) ou compression (Δl < 0). l₀ = longueur à vide (constante).'));
+  if (hor) rows.push(eq('blue', `${V('R', 'N')} : R<sub>N</sub> = P = <b>${fN(f.Rn)} N</b>`, 'Action de contact de la table : elle compense le poids.'));
+  if (!isAdv()) {
+    const atEq = Math.abs(RS.v) < 2e-3 && Math.abs(f.a) < 0.02;
+    rows.push(atEq ? eq('ok', hor ? `${V('P')} + ${V('R', 'N')} + ${V('T')} = ${V('0')}` : `${V('P')} + ${V('T')} = ${V('0')}`, 'Les forces <b>se compensent</b> : la masse est en équilibre.')
+                   : eq('gray', 'Les forces ne se compensent pas', 'La masse oscille autour de sa position d\'équilibre.'));
+    return `<div class="eqgrid">${rows.join('')}</div>`;
+  }
+  rows.push(eq('blue', `${V('T')} = −k·Δl·${V('u')} ⇒ T<sub>x</sub> = −k·x = <b>${fN(f.T)} N</b>`, 'Force de rappel : toujours dirigée vers la position où le ressort est à vide.'));
+  if (!hor) rows.push(eq('ok', `Équilibre : k·Δl<sub>éq</sub> = m·g ⇒ Δl<sub>éq</sub> = <b>${fmt(dlEq() * 100, 1)} cm</b>`, 'À l\'équilibre, la tension compense le poids.'));
+  const T0 = 2 * Math.PI * Math.sqrt(r.m / r.k);
+  rows.push(eq('gray', `T<sub>0</sub> = 2π·√(m/k) = <b>${fmt(T0, 2)} s</b>`, 'Période propre des oscillations (sans amortissement).'));
+  rows.push(eq('gray', `E<sub>él</sub> = ½·k·Δl² = <b>${fmt(0.5 * r.k * dl * dl, 3)} J</b>`, 'Énergie potentielle élastique stockée dans le ressort.'));
+  rows.push(eq('ok', `m·a = Σ F<sub>x</sub> ⇒ a = <b>${fmt(f.a, 2)} m/s²</b>`, 'Deuxième loi de Newton' + (hor ? ' (axe horizontal).' : ' (axe vertical orienté vers le bas).')));
+  return `<div class="eqgrid">${rows.join('')}</div>`;
+}
+function statusPlan(d) {
+  const p = S.plan;
+  if (PS.ended) return PS.endMsg;
+  if (d.regime === 'repos') return 'Immobile : les forces se compensent.';
+  if (d.regime === 'vcte') return Math.abs(d.Fu) < 1e-9 ? 'Vitesse constante sans force motrice : principe d\'inertie.' : 'Vitesse constante : la force motrice compense le reste (somme des forces nulle).';
+  if (d.regime === 'roule-glisse') return 'Pente trop raide pour cette surface : la bille roule en glissant.';
+  if (p.obj !== 'sphere' && Math.abs(d.a) < 2e-3 && PS.v !== 0) return 'Vitesse constante : la composante Pₓ est compensée par le frottement.';
+  if (!S.running && PS.t === 0) return 'Prêt : appuyez sur Lecture.';
+  return Math.sign(d.a) === Math.sign(PS.v) || PS.v === 0 ? 'Les forces ne se compensent pas : la vitesse augmente.' : 'Les forces ne se compensent pas : la vitesse diminue.';
+}
+function updateReadouts() {
+  if (S.tab === 'plan') {
+    const d = planDyn();
+    $('#eqs').innerHTML = `<h3><span>Forces et équations</span><span>${isAdv() ? 'Mode avancé' : 'Mode élève'}</span></h3>` + planEquations(d);
+    $('#status').textContent = statusPlan(d);
+    $('#readout').textContent = `t = ${fmt(PS.t, 2)} s · v = ${fmt(Math.abs(PS.v), 2)} m/s`;
+  } else if (S.tab === 'ressort') {
+    const f = resForces();
+    $('#eqs').innerHTML = `<h3><span>Forces et équations</span><span>${isAdv() ? 'Mode avancé' : 'Mode élève'}</span></h3>` + resEquations(f);
+    const atEq = Math.abs(RS.v) < 2e-3 && Math.abs(f.a) < 0.02;
+    $('#status').textContent = atEq ? 'Équilibre : les forces se compensent.' : (!S.running && RS.t === 0 ? 'Prêt : appuyez sur Lecture.' : 'Oscillation autour de la position d\'équilibre.');
+    $('#readout').textContent = `t = ${fmt(RS.t, 2)} s · Δl = ${fmt(RS.x * 100, 1)} cm`;
+  }
+  $('#warn').textContent = warnMsg;
+}
+function updateInfo() {
+  let t, d;
+  if (S.tab === 'plan') {
+    const p = S.plan;
+    if (p.sit === 'standard') { const s = SIT_PLAN.find(x => x.id === p.sitId); t = s.t; d = s.d; }
+    else { t = 'Mode libre — ' + OBJ[p.obj].t; d = 'Modifiez les paramètres : la simulation, les flèches et les équations se mettent à jour instantanément.'; }
+  } else {
+    const r = S.res;
+    if (r.sit === 'standard') { const s = SIT_RES.find(x => x.id === r.sitId); t = s.t; d = s.d; }
+    else { t = 'Mode libre — ressort ' + (r.orient === 'h' ? 'horizontal' : 'vertical'); d = 'Choisissez le ressort, la masse et l\'étirement initial, puis lancez.'; }
+  }
+  $('#infoT').textContent = t; $('#infoD').textContent = d;
+  if (S.g === 1.6 && !warnMsg) warnMsg = 'Sur la Lune, la masse ne change pas mais le poids est environ 6 fois plus faible.';
+}
+function updateLegend() {
+  const plan = S.tab === 'plan';
+  const sc = plan ? `Échelle : 1 carreau de la pente (1 m) ↔ ${fN(planScaleN())} N` : `Échelle : 10 cm ↔ ${fN(resScaleN())} N`;
+  $('#legend').innerHTML = `<div class="lg"><span class="sw red"></span>Force à distance</div><div class="lg"><span class="sw blue"></span>Force de contact</div>
+    <div class="sc">${sc}<br>Chronophotographie : τ = ${fmt(chronoDt(), 2)} s</div>`;
+  $('#gTitle').textContent = plan ? 'Vitesse v (m/s) en fonction du temps' : 'Allongement Δl (cm) en fonction du temps';
+}
+function updateTransport() {
+  $('#btnPlay').innerHTML = S.running ? ICON.pause + 'Pause' : ICON.play + 'Lecture';
+  $('#btnSlow').classList.toggle('on', S.slow);
+}
+
+/* =====================================================================
+   PANNEAU DE COMMANDE
+   ===================================================================== */
+function card(title, ...kids) { return h('div', { class: 'card' }, h('h3', {}, title), ...kids); }
+function seg(opts, val, onPick, full = true) {
+  return h('div', { class: 'seg' + (full ? ' full' : '') }, opts.map(([v, t]) => h('button', { class: v === val ? 'on' : '', onclick: () => onPick(v) }, t)));
+}
+function sliderRow(o) {
+  const unit = o.unit ? ' ' + o.unit : '';
+  const val = h('span', { class: 'val' }, fmt(o.value, o.dig) + unit);
+  const inp = h('input', { type: 'range', min: o.min, max: o.max, step: o.step, value: o.value, disabled: o.dis });
+  inp.addEventListener('input', () => { const v = parseFloat(inp.value); val.textContent = fmt(v, o.dig) + unit; o.on(v); });
+  if (o.end) inp.addEventListener('change', () => o.end());
+  return h('div', { class: 'ctrl' + (o.dis ? ' locked' : '') },
+    h('div', { class: 'ctrl-h' }, h('label', {}, o.label), val), inp,
+    h('div', { class: 'hint' }, `Plage : ${fmt(o.min, o.dig)} à ${fmt(o.max, o.dig)}${unit}` + (o.hint ? ' — ' + o.hint : '')));
+}
+function selectRow(o) {
+  const s = h('select', { disabled: o.dis }, o.options.map(([v, t]) => { const op = h('option', { value: v }, t); if (v === o.value) op.selected = true; return op; }));
+  s.addEventListener('change', () => o.on(s.value));
+  return h('div', { class: 'ctrl' + (o.dis ? ' locked' : '') }, h('div', { class: 'ctrl-h' }, h('label', {}, o.label)), s, o.hint ? h('div', { class: 'hint' }, o.hint) : null);
+}
+function chk(label, key) {
+  const i = h('input', { type: 'checkbox' }); i.checked = S.show[key];
+  i.addEventListener('change', () => { S.show[key] = i.checked; if (key === 'chrono' && !i.checked && HAS3D) clearChrono(); });
+  return h('label', { class: 'chk' }, i, label);
+}
+function lockBox(onEdit) {
+  return [h('div', { class: 'lock', html: ICON.lock + '<span>Conditions standards des manuels : paramètres verrouillés.</span>' }),
+          h('button', { class: 'btn full', html: ICON.edit + 'Modifier cette situation', onclick: onEdit })];
+}
+function displayCard() {
+  return card('Affichage', chk('Flèches des forces', 'forces'), chk('Valeurs des forces', 'valeurs'), chk('Chronophotographie', 'chrono'),
+    isAdv() && S.tab === 'plan' ? chk('Composantes Pₓ et Pᵧ', 'comp') : null);
+}
+function renderPanel() {
+  const P = $('#panel'); P.innerHTML = '';
+  if (S.tab === 'plan') P.append(...planPanel()); else if (S.tab === 'ressort') P.append(...resPanel());
+  updateInfo(); updateLegend(); updateReadouts();
+}
+/** Toute modification de paramètre : on repart de l'état initial (en pause). */
+function paramChanged(rebuild = false) {
+  S.running = false; updateTransport(); warnMsg = '';
+  if (S.tab === 'plan') { if (HAS3D && FR && Math.abs(FR.al - rad(S.plan.alpha)) > 1e-9) buildWedge(); planInit(); }
+  else if (S.tab === 'ressort') { clampRes(); resInit(); }
+  else return;
+  if (rebuild) renderPanel(); else { updateInfo(); updateLegend(); updateReadouts(); }
+}
+
+function planPanel() {
+  const p = S.plan, lock = p.sit === 'standard', adv = isAdv(), O = OBJ[p.obj];
+  const sits = SIT_PLAN.filter(s => adv || !s.adv);
+  const sitCard = card('Situation',
+    seg([['standard', 'Situations standards'], ['libre', 'Mode libre']], p.sit, v => { p.sit = v; if (v === 'standard') applySit('plan', p.sitId); else paramChanged(true); }),
+    lock ? h('div', { class: 'sitlist' }, sits.map(s => h('button', { class: 'sit' + (s.id === p.sitId ? ' on' : ''), onclick: () => applySit('plan', s.id) }, h('span', {}, s.t), s.adv ? h('span', { class: 'badge adv' }, 'Avancé') : null))) : h('p', { class: 'note' }, 'Les curseurs sont limités à des valeurs réalistes. Les combinaisons impossibles sont bloquées et expliquées.'),
+    lock ? lockBox(() => { p.sit = 'libre'; paramChanged(true); }) : null);
+
+  const mvtOpts = Object.entries(MVT).filter(([k, m]) => (!m.adv || adv) && (!m.veh || p.obj === 'vehicule')).map(([k, m]) => [k, m.t]);
+  const surfOpts = surfList().filter(s => !s.adv || adv).map(s => [s.id, s.t + (adv && s.mu !== null ? ` (μ = ${fmt(s.mu, 2)})` : '')]);
+  const sCur = surfList().find(s => s.id === p.surf);
+  const params = card('Paramètres',
+    selectRow({ label: 'Objet', dis: lock, value: p.obj, options: Object.entries(OBJ).map(([k, o]) => [k, o.t]), on: v => {
+      p.obj = v; const o = OBJ[v]; p.m = o.mDef; p.alpha = Math.min(p.alpha, o.aMax);
+      if (!surfList().some(s => s.id === p.surf)) p.surf = 'aucun';
+      if (v !== 'vehicule' && p.mvt === 'vcte') p.mvt = 'lacher';
+      cameraDefaults(); paramChanged(true); } }),
+    sliderRow({ label: 'Masse m', dis: lock, min: O.mMin, max: O.mMax, step: O.mStep, value: p.m, dig: O.mDig, unit: 'kg', on: v => { p.m = v; paramChanged(); } }),
+    sliderRow({ label: 'Angle de la pente α', dis: lock, min: 0, max: O.aMax, step: 1, value: p.alpha, dig: 0, unit: '°',
+      hint: p.obj === 'vehicule' ? 'au-delà de 20° (≈ 36 %), une route n\'est plus praticable' : '0° = support horizontal', on: v => { p.alpha = v; paramChanged(); } }),
+    selectRow({ label: p.obj === 'vehicule' ? 'Type de route (résistance)' : 'Surface de contact (frottements)', dis: lock, value: p.surf, options: surfOpts, on: v => { p.surf = v; paramChanged(true); },
+      hint: adv ? 'Simplification : coefficient d\'adhérence = coefficient de glissement.' : null }),
+    (sCur && sCur.mu === null) ? sliderRow({ label: 'Coefficient de frottement μ', dis: lock, min: 0, max: sCur.max, step: 0.01, value: p.muPerso, dig: 2, unit: '', on: v => { p.muPerso = v; paramChanged(); } }) : null,
+    selectRow({ label: 'Mouvement', dis: lock, value: p.mvt, options: mvtOpts, on: v => { p.mvt = v; paramChanged(true); },
+      hint: p.obj !== 'vehicule' ? 'La vitesse constante imposée est réservée au véhicule (il a un moteur).' : null }),
+    (p.mvt === 'haut' || p.mvt === 'bas') ? sliderRow({ label: 'Vitesse initiale v₀', dis: lock, min: 0.5, max: 10, step: 0.5, value: p.v0, dig: 1, unit: 'm/s', on: v => { p.v0 = v; paramChanged(); } }) : null,
+    p.mvt === 'vcte' ? sliderRow({ label: 'Vitesse constante v', dis: lock, min: 1, max: 10, step: 0.5, value: p.vc, dig: 1, unit: 'm/s', hint: 'v₀ n\'a pas de sens ici : la vitesse est imposée', on: v => { p.vc = v; paramChanged(); } }) : null
+  );
+  return [sitCard, params, displayCard()];
+}
+
+function clampRes() {
+  const r = S.res;
+  if (r.kp !== 'libre') r.k = KPRESET[r.kp].k;
+  if (r.orient === 'v') { const mx = mMaxVert(); if (r.m > mx + 1e-9) { r.m = mx; warnMsg = `Masse ramenée à ${fmt(mx, 2)} kg : avec ce ressort, une masse plus grande l'allongerait de plus de 25 cm (hors du domaine élastique du modèle).`; } }
+  const [a, b] = dlRange(); if (r.dl0 < a - 1e-9 || r.dl0 > b + 1e-9) { r.dl0 = clamp(r.dl0, a, b); if (!warnMsg) warnMsg = 'Étirement initial ajusté pour rester dans les limites du ressort.'; }
+}
+function resPanel() {
+  const r = S.res, lock = r.sit === 'standard', adv = isAdv(), hor = r.orient === 'h';
+  const sits = SIT_RES.filter(s => s.o === r.orient && (adv || !s.adv));
+  const orientCard = card('Orientation du ressort',
+    seg([['h', 'Horizontal'], ['v', 'Vertical']], r.orient, v => {
+      r.orient = v; if (HAS3D) buildResScene(); cameraDefaults();
+      if (r.sit === 'standard') { const first = SIT_RES.find(s => s.o === v); applySit('ressort', first.id); } else paramChanged(true);
+    }),
+    h('p', { class: 'note' }, hor ? 'Masse posée sur une table sans frottement, accrochée à un mur. Le poids est compensé par la table.' : 'Masse suspendue à un support. À l\'équilibre, le ressort est déjà allongé par le poids.'));
+  const sitCard = card('Situation',
+    seg([['standard', 'Situations standards'], ['libre', 'Mode libre']], r.sit, v => { r.sit = v; if (v === 'standard') { const s = SIT_RES.find(x => x.id === r.sitId && x.o === r.orient) || sits[0]; applySit('ressort', s.id); } else paramChanged(true); }),
+    lock ? h('div', { class: 'sitlist' }, sits.map(s => h('button', { class: 'sit' + (s.id === r.sitId ? ' on' : ''), onclick: () => applySit('ressort', s.id) }, h('span', {}, s.t), s.adv ? h('span', { class: 'badge adv' }, 'Avancé') : null))) : h('p', { class: 'note' }, 'Les plages s\'adaptent au ressort choisi pour rester dans le domaine élastique.'),
+    lock ? lockBox(() => { r.sit = 'libre'; paramChanged(true); }) : null);
+  const [a, b] = dlRange(); const mMax = hor ? 2 : mMaxVert();
+  const params = card('Paramètres',
+    h('div', { class: 'hint', style: 'margin-bottom:10px' }, `Longueur à vide l₀ = ${fmt(L0 * 100, 0)} cm (constante)`),
+    selectRow({ label: 'Ressort', dis: lock, value: r.kp, options: Object.entries(KPRESET).map(([k, o]) => [k, o.t]), on: v => { r.kp = v; if (v !== 'libre') r.k = KPRESET[v].k; paramChanged(true); } }),
+    r.kp === 'libre' ? sliderRow({ label: 'Raideur k', dis: lock, min: 5, max: 300, step: 5, value: r.k, dig: 0, unit: 'N/m', on: v => { r.k = v; paramChanged(); refreshDlSlider(); }, end: () => renderPanel() }) : null,
+    sliderRow({ label: 'Masse m', dis: lock, min: 0.1, max: mMax, step: 0.05, value: Math.min(r.m, mMax), dig: 2, unit: 'kg', hint: hor ? null : `maximum ${fmt(mMax, 2)} kg avec ce ressort`, on: v => { r.m = v; paramChanged(); refreshDlSlider(); } }),
+    h('div', { id: 'dlSlot' }, dlSlider(lock)),
+    adv ? selectRow({ label: 'Amortissement (frottements)', dis: lock, value: r.damp, options: Object.entries(DAMP).map(([k, o]) => [k, o.t]), on: v => { r.damp = v; paramChanged(); } }) : null
+  );
+  return [orientCard, sitCard, params, displayCard()];
+}
+function dlSlider(lock) {
+  const r = S.res, [a, b] = dlRange();
+  const hint = r.orient === 'h' ? 'au-delà de 15 cm, les spires se toucheraient en compression' : `position d'équilibre : Δl = ${fmt(dlEq() * 100, 1)} cm`;
+  return sliderRow({ label: r.orient === 'h' ? 'Étirement initial Δl₀ (− : compression)' : 'Allongement initial Δl₀', dis: lock, min: +(a * 100).toFixed(1), max: +(b * 100).toFixed(1), step: 0.5, value: +(r.dl0 * 100).toFixed(1), dig: 1, unit: 'cm', hint, on: v => { r.dl0 = v / 100; paramChanged(); } });
+}
+function refreshDlSlider() { const s = $('#dlSlot'); if (s) { s.innerHTML = ''; s.append(dlSlider(S.res.sit === 'standard')); } }
+
+/** Charge une situation standard (paramètres verrouillés). */
+function applySit(tab, id) {
+  if (tab === 'plan') {
+    const s = SIT_PLAN.find(x => x.id === id);
+    Object.assign(S.plan, { v0: 3, vc: 3, muPerso: 0.3 }, s.p, { sit: 'standard', sitId: id });
+    if (HAS3D) buildWedge();
+  } else {
+    const s = SIT_RES.find(x => x.id === id);
+    const prevO = S.res.orient;
+    Object.assign(S.res, s.p, { sit: 'standard', sitId: id, orient: s.o });
+    if (s.p.dl0 === 'eq') S.res.dl0 = dlEq();
+    if (HAS3D && prevO !== s.o) buildResScene();
+  }
+  cameraDefaults(); paramChanged(true);
+}
+
+/* =====================================================================
+   NAVIGATION, MODES, g
+   ===================================================================== */
+function switchTab(tab) {
+  S.tab = tab; S.running = false; updateTransport();
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  const sim = tab === 'plan' || tab === 'ressort';
+  $('#simView').hidden = !sim; $('#triView').hidden = tab !== 'tri'; $('#defisView').hidden = tab !== 'defis';
+  if (sim && HAS3D) {
+    planG.visible = tab === 'plan'; resG.visible = tab === 'ressort';
+    if (tab === 'ressort' && !resG.children.length) buildResScene();
+    clearChrono(); cameraDefaults(); resize();
+  }
+  if (sim) { warnMsg = ''; if (tab === 'plan') planInit(); else { clampRes(); resInit(); } renderPanel(); }
+}
+function setMode(m) {
+  S.mode = m;
+  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  if (m === 'eleve') {
+    // On retire ce qui n'existe qu'en mode avancé
+    const p = S.plan, sp = SIT_PLAN.find(x => x.id === p.sitId);
+    if (p.sit === 'standard' && sp.adv) applySit('plan', 'p1');
+    if (p.sit === 'libre') { if (p.surf === 'perso') p.surf = 'bois'; if (p.mvt === 'haut' || p.mvt === 'bas') p.mvt = 'lacher'; }
+    const r = S.res, sr = SIT_RES.find(x => x.id === r.sitId);
+    if (r.sit === 'standard' && sr.adv) { r.sitId = SIT_RES.find(x => x.o === r.orient && !x.adv).id; Object.assign(r, SIT_RES.find(x => x.id === r.sitId).p); if (r.dl0 === 'eq') r.dl0 = dlEq(); }
+    r.damp = 'aucun';
+  }
+  if (S.tab === 'plan' || S.tab === 'ressort') paramChanged(true);
+  renderDefis();
+}
+function setG(g) {
+  S.g = g; $('#gSel').value = String(g);
+  if (S.res.dl0 !== undefined && S.res.sit === 'standard') { const s = SIT_RES.find(x => x.id === S.res.sitId); if (s && s.p.dl0 === 'eq') S.res.dl0 = dlEq(); }
+  if (S.tab === 'plan' || S.tab === 'ressort') paramChanged(true);
+}
+
+/* =====================================================================
+   ONGLET 3 — ATELIER DE TRI
+   ===================================================================== */
+const TRI = [
+  { e: '🍎', q: 'Une pomme tombe de l\'arbre.', a: 'distance', au: 'la Terre', re: 'la pomme', err: 'Pendant la chute, la pomme ne touche rien : la Terre agit sur elle à distance (le poids).' },
+  { e: '🧲', q: 'Un aimant attire un clou, sans le toucher.', a: 'distance', au: 'l\'aimant', re: 'le clou', err: 'Le clou se met en mouvement avant tout contact : l\'action magnétique s\'exerce à distance.' },
+  { e: '🛒', q: 'Une main pousse un chariot.', a: 'contact', au: 'la main', re: 'le chariot', err: 'La main touche le chariot : c\'est une action de contact (localisée).' },
+  { e: '⛵', q: 'Le vent pousse la voile d\'une pirogue.', a: 'contact', au: 'l\'air (le vent)', re: 'la voile', err: 'On ne voit pas l\'air, mais il touche toute la surface de la voile : action de contact répartie.' },
+  { e: '📘', q: 'Une table soutient un livre posé sur elle.', a: 'contact', au: 'la table', re: 'le livre', err: 'Le livre est en contact avec la table : la réaction du support est une action de contact.' },
+  { e: '🌕', q: 'La Terre retient la Lune sur son orbite.', a: 'distance', au: 'la Terre', re: 'la Lune', err: 'Des centaines de milliers de kilomètres les séparent : l\'attraction gravitationnelle agit à distance.' },
+  { e: '🎈', q: 'Un ballon frotté attire de petits morceaux de papier.', a: 'distance', au: 'le ballon électrisé', re: 'les papiers', err: 'Les papiers bougent avant de toucher le ballon : l\'action électrique s\'exerce à distance.' },
+  { e: '🚗', q: 'Le sol freine une voiture qui ralentit.', a: 'contact', au: 'le sol', re: 'les pneus', err: 'Les pneus touchent la route : les frottements sont des actions de contact.' },
+  { e: '💡', q: 'Un fil retient une lampe suspendue.', a: 'contact', au: 'le fil', re: 'la lampe', err: 'Le fil est attaché à la lampe : la tension du fil est une action de contact.' },
+  { e: '🌀', q: 'Un ressort étiré tire sur une masse accrochée.', a: 'contact', au: 'le ressort', re: 'la masse', err: 'La masse est accrochée au ressort : la force de rappel est une action de contact.' },
+  { e: '📗', q: 'Le livre est posé sur la table. Action de la Terre sur le livre ?', a: 'distance', au: 'la Terre', re: 'le livre', err: 'Piège classique : le livre touche la table, pas la Terre ! Le poids reste une action à distance, même pour un objet posé.' },
+  { e: '🚤', q: 'L\'eau pousse un bateau vers le haut (il flotte).', a: 'contact', au: 'l\'eau', re: 'la coque', err: 'L\'eau touche toute la coque immergée : la poussée d\'Archimède est une action de contact répartie.' },
+  { e: '🧲', q: 'Deux aimants se repoussent sans se toucher.', a: 'distance', au: 'un aimant', re: 'l\'autre aimant', err: 'Il n\'y a aucun contact : la répulsion magnétique agit à distance.' },
+  { e: '⚽', q: 'Le pied frappe le ballon.', a: 'contact', au: 'le pied', re: 'le ballon', err: 'Le pied touche le ballon pendant un court instant : action de contact.' }
+];
+let triState = [];
+function renderTri(shuffle = false) {
+  if (shuffle || !triState.length) {
+    const idx = TRI.map((_, i) => i); for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+    triState = idx.map(i => ({ i, tries: 0, done: false, first: null }));
+  }
+  const G = $('#triGrid'); G.innerHTML = '';
+  triState.forEach(st => {
+    const it = TRI[st.i];
+    const fb = h('div', { class: 'fb', style: 'display:none' });
+    const cardEl = h('div', { class: 'tcard' }, h('div', { style: 'display:flex;gap:10px;align-items:flex-start' }, h('span', { class: 'em' }, it.e), h('div', { class: 'q' }, it.q)));
+    const bC = h('button', { class: 'choice c' }, 'Contact'), bD = h('button', { class: 'choice d' }, 'À distance');
+    const answer = (rep, btn) => {
+      if (st.done) return; st.tries++;
+      if (rep === it.a) {
+        st.done = true; if (st.first === null) st.first = true;
+        cardEl.className = 'tcard good'; btn.classList.add('picked'); bC.disabled = bD.disabled = true;
+        fb.className = 'fb good'; fb.style.display = 'block';
+        fb.innerHTML = `<b>Bravo !</b> Action ${it.a === 'contact' ? 'de contact' : 'à distance'} de <b>${it.au}</b> sur <b>${it.re}</b>. ` + (it.a === 'contact' ? '→ flèche <b style="color:var(--blue)">bleue</b>.' : '→ flèche <b style="color:var(--red)">rouge</b>.');
+      } else {
+        if (st.first === null) st.first = false;
+        cardEl.className = 'tcard bad'; btn.disabled = true;
+        fb.className = 'fb bad'; fb.style.display = 'block';
+        fb.innerHTML = `<b>Pas tout à fait.</b> Auteur : <b>${it.au}</b> · receveur : <b>${it.re}</b>. ${it.err} <i>Réessaie !</i>`;
+      }
+      updateTriScore();
+    };
+    bC.onclick = () => answer('contact', bC); bD.onclick = () => answer('distance', bD);
+    cardEl.append(h('div', { class: 'choices' }, bC, bD), fb);
+    G.append(cardEl);
+  });
+  updateTriScore();
+}
+function updateTriScore() {
+  const done = triState.filter(s => s.done).length, first = triState.filter(s => s.first === true).length;
+  $('#triScore').textContent = `Trouvées : ${done}/${TRI.length} · du premier coup : ${first}`;
+}
+
+/* =====================================================================
+   ONGLET 4 — DÉFIS « je prédis, j'observe »
+   ===================================================================== */
+const DEFIS = [
+  { q: 'Un cube est posé sans vitesse sur une pente en bois de 15° (μ = 0,30). Que fait-il ?', o: ['Il glisse vers le bas', 'Il reste immobile', 'Il roule'], ok: 1,
+    x: 'tan 15° ≈ 0,27 ≤ 0,30 : le frottement d\'adhérence suffit à compenser Pₓ. Les forces se compensent, le cube reste immobile.',
+    pre: { tab: 'plan', p: { obj: 'cube', m: 2, alpha: 15, surf: 'bois', mvt: 'lacher' } } },
+  { q: 'Sans frottement, sur une pente de 30°, on remplace un cube de 2 kg par un cube de 4 kg. Son accélération…', o: ['double', 'reste la même', 'est divisée par deux'], ok: 1,
+    x: 'Sans frottement, a = g·sin α : la masse n\'intervient pas. Le poids double, mais il faut aussi deux fois plus de force pour accélérer la masse.',
+    pre: { tab: 'plan', p: { obj: 'cube', m: 4, alpha: 30, surf: 'aucun', mvt: 'lacher' } } },
+  { q: 'Un véhicule roule à 5 m/s sur une route horizontale SANS aucune résistance. Quelle force motrice faut-il pour garder cette vitesse ?', o: ['Une force égale à son poids', 'Une petite force constante', 'Aucune force : F = 0'], ok: 2,
+    x: 'Principe d\'inertie : si rien ne freine, le mouvement rectiligne uniforme se poursuit seul. Une force n\'est nécessaire que pour compenser les résistances.',
+    pre: { tab: 'plan', p: { obj: 'vehicule', m: 1000, alpha: 0, surf: 'aucun', mvt: 'vcte', vc: 5 } } },
+  { q: 'Sur la Lune (g = 1,6 N/kg), que devient un cube de 2 kg ?', o: ['Sa masse vaut 0,32 kg', 'Sa masse reste 2 kg, son poids vaut 3,2 N', 'Sa masse et son poids ne changent pas'], ok: 1,
+    x: 'La masse (en kg) est la quantité de matière : elle ne dépend pas du lieu. Le poids P = m·g dépend de g : 2 × 1,6 = 3,2 N.',
+    pre: { tab: 'plan', g: 1.6, p: { obj: 'cube', m: 2, alpha: 0, surf: 'bois', mvt: 'lacher' } } },
+  { q: 'Une masse de 0,5 kg est suspendue à un ressort de raideur 50 N/m (g = 10 N/kg). Quel est l\'allongement à l\'équilibre ?', o: ['1 cm', '10 cm', '50 cm'], ok: 1,
+    x: 'À l\'équilibre, T = P donc k·Δl = m·g : Δl = 0,5 × 10 / 50 = 0,10 m = 10 cm.',
+    pre: { tab: 'ressort', g: 10, p: { orient: 'v', kp: 'moyen', k: 50, m: 0.5, dl0: 'eq', damp: 'aucun' } } },
+  { q: 'Pendant qu\'un cube lancé MONTE une pente glacée, la force de frottement est dirigée…', o: ['vers le haut de la pente', 'vers le bas de la pente', 'elle est nulle'], ok: 1, adv: true,
+    x: 'Le frottement s\'oppose toujours au mouvement : pendant la montée, il est dirigé vers le bas. Il change de sens quand le cube redescend.',
+    pre: { tab: 'plan', p: { obj: 'cube', m: 1, alpha: 20, surf: 'glace', mvt: 'haut', v0: 6 } } },
+  { q: 'Sur la même pente, une bille roule sans glisser et un cube glisse sans frottement. Lequel accélère le plus ?', o: ['La bille', 'Le cube', 'Les deux pareil'], ok: 1, adv: true,
+    x: 'Cube : a = g·sin α. Bille : a = (5/7)·g·sin α, car une partie de l\'énergie sert à la faire tourner. Le cube accélère plus.',
+    pre: { tab: 'plan', p: { obj: 'sphere', m: 1, alpha: 20, surf: 'bois', mvt: 'lacher' } } },
+  { q: 'On remplace un ressort par un ressort 4 fois plus raide (même masse). La période des oscillations…', o: ['est multipliée par 4', 'est multipliée par 2', 'est divisée par 2'], ok: 2, adv: true,
+    x: 'T₀ = 2π·√(m/k) : k × 4 ⇒ √k × 2 ⇒ période divisée par 2. Comparez T₀ affiché avec k = 50 puis k = 200 N/m.',
+    pre: { tab: 'ressort', p: { orient: 'h', kp: 'raide', k: 200, m: 0.5, dl0: 0.1, damp: 'aucun' } } }
+];
+const defState = {};
+function renderDefis() {
+  const list = $('#defList'); list.innerHTML = '';
+  const items = DEFIS.map((d, i) => ({ d, i })).filter(({ d }) => isAdv() || !d.adv);
+  items.forEach(({ d, i }, n) => {
+    const st = defState[i] || (defState[i] = { pick: null });
+    const fb = h('div', { class: 'fb', style: 'display:none;margin-top:8px' });
+    const cardEl = h('div', { class: 'tcard', style: 'margin-bottom:12px' },
+      h('div', { class: 'q' }, h('span', { class: 'dnum' }, String(n + 1)), d.q, d.adv ? h('span', { class: 'badge adv', style: 'margin-left:8px' }, 'Avancé') : null));
+    const opts = h('div', {});
+    const show = () => {
+      opts.innerHTML = '';
+      d.o.forEach((t, k) => {
+        const b = h('button', { class: 'opt', disabled: st.pick !== null }, t);
+        if (st.pick !== null) { if (k === d.ok) b.classList.add('good'); else if (k === st.pick) b.classList.add('bad'); }
+        b.onclick = () => { st.pick = k; show(); updateDefScore(); };
+        opts.append(b);
+      });
+      if (st.pick !== null) {
+        const good = st.pick === d.ok;
+        fb.style.display = 'block'; fb.className = 'fb ' + (good ? 'good' : 'bad');
+        fb.innerHTML = `<b>${good ? 'Bonne prédiction !' : 'Prédiction à revoir.'}</b> ${d.x}`;
+      }
+    };
+    show();
+    const obs = h('button', { class: 'btn', html: ICON.eye + 'Observer dans la simulation', onclick: () => loadPreset(d.pre) });
+    const again = h('button', { class: 'btn', onclick: () => { st.pick = null; fb.style.display = 'none'; show(); updateDefScore(); } }, 'Refaire');
+    cardEl.append(opts, h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, obs, again), fb);
+    list.append(cardEl);
+  });
+  updateDefScore();
+}
+function updateDefScore() {
+  const vis = DEFIS.map((d, i) => i).filter(i => isAdv() || !DEFIS[i].adv);
+  const ans = vis.filter(i => defState[i] && defState[i].pick !== null), ok = ans.filter(i => defState[i].pick === DEFIS[i].ok);
+  $('#defScore').textContent = `Réponses : ${ans.length}/${vis.length} · justes : ${ok.length}`;
+}
+/** Ouvre la simulation dans la configuration du défi (mode libre) et la lance. */
+function loadPreset(pre) {
+  if (pre.g) { S.g = pre.g; $('#gSel').value = String(pre.g); }
+  if (pre.tab === 'plan') { Object.assign(S.plan, { v0: 3, vc: 3 }, pre.p, { sit: 'libre' }); }
+  else { Object.assign(S.res, pre.p, { sit: 'libre' }); if (pre.p.dl0 === 'eq') S.res.dl0 = dlEq(); }
+  switchTab(pre.tab);
+  if (HAS3D) { if (pre.tab === 'plan') buildWedge(); else buildResScene(); }
+  cameraDefaults(); paramChanged(true);
+  setTimeout(() => { S.running = true; updateTransport(); }, 700);
+}
+
+/* =====================================================================
+   DÉMARRAGE
+   ===================================================================== */
+function bindUI() {
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+  document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+  $('#gSel').onchange = e => setG(parseFloat(e.target.value));
+  document.querySelectorAll('#viewSeg button').forEach(b => b.onclick = () => {
+    S.view = b.dataset.view; document.querySelectorAll('#viewSeg button').forEach(x => x.classList.toggle('on', x === b)); snapCam = true;
+  });
+  $('#btnPlay').onclick = () => {
+    if (S.tab === 'plan' && PS.ended) planInit();
+    S.running = !S.running; updateTransport();
+  };
+  $('#btnReset').onclick = () => { S.running = false; updateTransport(); if (S.tab === 'plan') planInit(); else resInit(); };
+  $('#btnSlow').onclick = () => { S.slow = !S.slow; updateTransport(); };
+  $('#btnStep').onclick = () => {
+    S.running = false; updateTransport();
+    if (S.tab === 'plan' && PS.ended) return;
+    const n = Math.round(chronoDt() / DT); for (let i = 0; i < n; i++) { stepSim(DT); if (S.tab === 'plan' && PS.ended) break; }
+  };
+  $('#triReset').onclick = () => renderTri(true);
+  // Raccourci clavier : barre d'espace = lecture / pause
+  document.addEventListener('keydown', e => { if (e.code === 'Space' && (S.tab === 'plan' || S.tab === 'ressort') && !/INPUT|SELECT|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); $('#btnPlay').click(); } });
+}
+function start() {
+  bindUI(); updateTransport();
+  if (HAS3D) {
+    try { init3D(); } catch (err) { console.error(err); }
+  } else {
+    $('#stage').append(h('div', { id: 'noThree', html: '<div><b>La 3D n\'a pas pu être chargée.</b><br>Three.js se télécharge depuis Internet : vérifiez la connexion puis rechargez la page.<br>Les équations, l\'atelier de tri et les défis restent utilisables.</div>' }));
+  }
+  applySit('plan', 'p2');
+  if (HAS3D && resG) { buildResScene(); resG.visible = false; }
+  renderTri(); renderDefis();
+  requestAnimationFrame(loop);
+}
+start();
+</script>
+</body>
+</html>
