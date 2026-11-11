@@ -6,12 +6,15 @@ Laboratoire virtuel interactif de sciences physiques (collège · lycée) pour c
 
 ## Contenu
 
-- **Plan incliné** : cube, bille ou véhicule ; angle, masse, surface ; lâcher, lancer avec v₀ ou vitesse constante (principe d'inertie).
-- **Ressort-masse** : horizontal ou vertical, ressorts souple / moyen / raide, règle graduée en Δl.
+- **Plan incliné** : cube, bille ou véhicule ; angle, masse, surface ; lâcher, lancer avec v₀, poussée de la main ou force motrice réglable (durée au choix), vitesse constante en montée ou en descente (freinage), marche arrière quand la force motrice ne suffit plus.
+- **Ressort-masse** : horizontal (0°), incliné (45°) ou vertical (90°), ressorts souple / moyen / raide, amortissement, règle graduée en Δl, position d'équilibre marquée.
+- **Projectiles** : chute libre, lancer vertical, lancer avec un angle, avec ou sans frottement de l'air (trajectoire idéale en pointillés pour comparer) ; axes gradués, flèche, portée, équations horaires.
 - **Atelier de tri** : 14 situations « contact ou à distance ? » avec correction guidée.
 - **Défis** : « je prédis, puis j'observe », reliés à la simulation.
 
-Deux modes (**Élève** / **Avancé**), situations standards verrouillées ou mode libre, g = 10 N/kg, 9,8 N/kg ou Lune (1,6 N/kg), lecture / pause / ralenti ×0,2 / pas-à-pas, chronophotographie et graphique en direct, vue 3D ou vue de profil.
+Chaque force a sa propre couleur de flèche (à l'échelle, avec une longueur minimale) ; son nom est écrit en **rouge** (action à distance) ou en **bleu** (action de contact). Les vitesses sont en pointillés gris.
+
+Deux modes (**Élève** : toutes les manipulations du programme ; **Avancé** : composantes, équations détaillées, μ chiffré, énergies). Frottements sur trois niveaux identiques partout (aucun, faible, fort). Vue de profil (on glisse pour remonter le temps) et vue 3D (on tourne autour). Axes x et y, centre de gravité G, hachures façon cahier, étiquettes des forces rangées en colonne, fiche A → B, repères cliquables sur la frise, bouton « Projeter » (scène seule en plein écran). Situations standards verrouillées ou mode libre avec garde-fous. Frise du temps, pas à pas avant/arrière, pauses automatiques aux moments clés, chronophotographie, cotes (positions A et B, Δl, distance d'arrêt), bilan des forces, diagramme objet-interaction, graphiques en direct, plein écran, taille des textes réglable, raccourcis clavier (Espace, R, ← →).
 
 ## Utilisation
 
