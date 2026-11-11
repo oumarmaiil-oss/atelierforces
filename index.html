@@ -82,6 +82,27 @@ details.sec .body{padding:2px 14px 14px}
 .projecting #stage{position:fixed;inset:0;z-index:1000;border-radius:0;border:0}
 #fsBtn{position:absolute;right:10px;bottom:76px;width:46px;height:46px;display:grid;place-items:center;border-radius:12px;cursor:pointer;color:#fff;background:rgba(79,70,229,.92);border:1px solid #818cf8}
 #fsBtn:hover{background:#6366f1}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.step>h3{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:15px;text-transform:none;letter-spacing:0;color:var(--ink)}
+.step>h3 .num{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent2);color:#fff;font-size:13px;flex:none}
+.step.fixed>h3 .num{background:#334155}
+.step .fixedObj{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;background:#0a1120;color:var(--muted);margin-bottom:10px;font-weight:700}
+.ropt{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.ropt button{text-align:left;border:1px solid var(--line);background:#0a1120;border-radius:9px;padding:9px 11px;min-height:42px;font-weight:600}
+.ropt button.on{border-color:var(--accent);background:var(--accent-soft);color:#fff}
+.ropt button[disabled]{opacity:.4;cursor:not-allowed}
+.quick{display:flex;gap:6px;margin:-4px 0 10px;flex-wrap:wrap}
+.quick button{border:1px solid var(--line);background:#0a1120;border-radius:8px;padding:5px 10px;font-weight:700;font-size:13px}
+.quick button.on{border-color:#fbbf24;color:#fde68a}
+.exhead{display:flex;flex-direction:column;gap:8px}
+.extag{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;padding:8px 10px;border-radius:9px;background:#0a1120;color:#cbd5e1}
+.extag b{color:#fde68a}
+.exgrp h4{margin:4px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.excard{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#0a1120;border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.excard:hover{border-color:#6366f1}
+.excard.on{border-color:var(--accent);background:var(--accent-soft)}
+.excard b{display:block;margin-bottom:2px}
+.excard span{font-size:12.5px;color:var(--muted)}
 .depart{background:#101a33;border:1px solid #3b4a7a;border-radius:var(--r);padding:12px 14px}
 .depart h3{margin:0 0 6px;font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:#fbbf24}
 .depart p{margin:0;font-size:14px;line-height:1.5}
@@ -385,50 +406,54 @@ const OBJ = {
   sphere:   { t: 'Bille', mMin: 0.1, mMax: 10,   mStep: 0.1, mDef: 1,    aMax: 60, hc: R_SPH, mDig: 1, fMax: 150,  fStep: 1 },
   vehicule: { t: 'Voiture',       mMin: 500, mMax: 2000, mStep: 50,  mDef: 1000, aMax: 20, hc: 0.78, mDig: 0, fMax: 10000, fStep: 100 }
 };
-const SURF = {   // trois niveaux de frottement, les mêmes dans tous les onglets
+const SURF = {   // quatre niveaux de frottement, les mêmes dans tous les onglets
   solide: [
     { id: 'aucun', t: 'Aucun — surface lisse (idéal)', mu: 0 }, { id: 'faible', t: 'Faible — glace', mu: 0.05 },
-    { id: 'fort', t: 'Fort — bois', mu: 0.30 }, { id: 'perso', t: 'Personnalisé (μ chiffré)', mu: null, adv: true, max: 1 }
+    { id: 'moyen', t: 'Moyen — bois', mu: 0.30 }, { id: 'fort', t: 'Fort — caoutchouc', mu: 0.70 },
+    { id: 'perso', t: 'Personnalisé — μ chiffré', mu: null, adv: true, max: 1 }
   ],
   vehicule: [
     { id: 'aucun', t: 'Aucun — route idéale', mu: 0 }, { id: 'faible', t: 'Faible — route goudronnée', mu: 0.02 },
-    { id: 'fort', t: 'Fort — piste sableuse', mu: 0.10 }, { id: 'perso', t: 'Personnalisé (μ chiffré)', mu: null, adv: true, max: 0.3 }
+    { id: 'moyen', t: 'Moyen — piste en terre', mu: 0.06 }, { id: 'fort', t: 'Fort — sable', mu: 0.12 },
+    { id: 'perso', t: 'Personnalisé — μ chiffré', mu: null, adv: true, max: 0.3 }
   ]
 };
 /* Situations standards du plan incliné. ped = grandeur que l'on peut manipuler même verrouillé. */
 const SIT_PLAN = [
-  { id: 'p1', t: 'Objet posé sur une table', p: { obj: 'cube', m: 2, alpha: 0, surf: 'fort', mvt: 'lacher' },
+  { id: 'p1', t: 'Posé sur une table', p: { obj: 'cube', m: 2, alpha: 0, surf: 'moyen', mvt: 'lacher' },
     d: 'Un cube posé sur un support horizontal. La Terre agit à distance, le support agit par contact : les deux forces se compensent, le cube reste immobile. Augmentez l\'angle dans le panneau (Support) pour voir quand il se met à glisser.' },
-  { id: 'p2', t: 'Glissement sans frottement', p: { obj: 'cube', m: 2, alpha: 30, surf: 'aucun', mvt: 'lacher' },
+  { id: 'p2', t: 'Glisse sans frottement', p: { obj: 'cube', m: 2, alpha: 30, surf: 'aucun', mvt: 'lacher' },
     d: 'Pente idéale : la réaction du plan est perpendiculaire au plan. Poids et réaction ne se compensent pas : le cube accélère.' },
-  { id: 'p3', t: 'Cube immobile sur une pente', p: { obj: 'cube', m: 2, alpha: 15, surf: 'fort', mvt: 'lacher' },
+  { id: 'p3', t: 'Immobile sur une pente', p: { obj: 'cube', m: 2, alpha: 15, surf: 'moyen', mvt: 'lacher' },
     d: 'Pente en bois de 15° : le frottement retient le cube. La réaction s\'incline et compense exactement le poids.' },
-  { id: 'p4', t: 'Glissement freiné', p: { obj: 'cube', m: 2, alpha: 30, surf: 'fort', mvt: 'lacher' },
+  { id: 'p4', t: 'Glisse avec frottement', p: { obj: 'cube', m: 2, alpha: 30, surf: 'moyen', mvt: 'lacher' },
     d: 'Pente en bois de 30° : trop raide pour rester immobile. Le cube glisse, freiné par le frottement.' },
-  { id: 'p10', t: 'Poussée sans frottement (inertie)', p: { obj: 'cube', m: 2, alpha: 0, surf: 'aucun', mvt: 'pousse', sens: 1, Fp: 10, dur: 1, perm: false, v0: 0 },
+  { id: 'p10', t: 'Poussé puis lâché, sans frottement', p: { obj: 'cube', m: 2, alpha: 0, surf: 'aucun', mvt: 'pousse', sens: 1, Fp: 10, dur: 1, perm: false, v0: 0 },
     d: 'Une main pousse le cube pendant 1 s, puis le lâche. Sans frottement, le cube continue tout droit à vitesse constante : c\'est le principe d\'inertie.' },
-  { id: 'p11', t: 'Poussée avec frottement', p: { obj: 'cube', m: 2, alpha: 0, surf: 'fort', mvt: 'pousse', sens: 1, Fp: 20, dur: 1, perm: false, v0: 0 },
+  { id: 'p11', t: 'Poussé puis lâché, avec frottement', p: { obj: 'cube', m: 2, alpha: 0, surf: 'moyen', mvt: 'pousse', sens: 1, Fp: 20, dur: 1, perm: false, v0: 0 },
     d: 'La main pousse le cube pendant 1 s. Quand elle le lâche, seul le frottement agit dans la direction du mouvement : le cube ralentit puis s\'arrête.' },
-  { id: 'p5', t: 'Bille qui roule', p: { obj: 'sphere', m: 1, alpha: 20, surf: 'fort', mvt: 'lacher' },
+  { id: 'p5', t: 'Roule sur une pente', p: { obj: 'sphere', m: 1, alpha: 20, surf: 'moyen', mvt: 'lacher' },
     d: 'Une bille lâchée sur une pente roule sans glisser : le contact avec le plan la fait tourner.' },
-  { id: 'p8', t: 'Lancer vers le haut sur la glace', p: { obj: 'cube', m: 1, alpha: 20, surf: 'faible', mvt: 'lancer', sens: -1, v0: 6 },
+  { id: 'p14', t: 'Lancée sur un sol plat', p: { obj: 'sphere', m: 1, alpha: 0, surf: 'moyen', mvt: 'lancer', sens: 1, v0: 3 },
+    d: 'La bille roule sans glisser sur un sol plat : rien ne la freine dans le sens du mouvement, elle garde sa vitesse (principe d\'inertie).' },
+  { id: 'p8', t: 'Lancé vers le haut de la pente', p: { obj: 'cube', m: 1, alpha: 20, surf: 'faible', mvt: 'lancer', sens: -1, v0: 6 },
     d: 'Le cube est lancé vers le haut. Pendant la montée, le frottement est dirigé vers le bas ; il change de sens à la descente.' },
-  { id: 'p6', t: 'Véhicule à vitesse constante (route idéale)', p: { obj: 'vehicule', m: 1000, alpha: 0, surf: 'aucun', mvt: 'vcte', sens: 1, vc: 5 },
+  { id: 'p6', t: 'Vitesse constante sur route idéale', p: { obj: 'vehicule', m: 1000, alpha: 0, surf: 'aucun', mvt: 'vcte', sens: 1, vc: 5 },
     d: 'Route horizontale sans aucune résistance : le véhicule garde sa vitesse SANS force motrice (F = 0). C\'est le principe d\'inertie.' },
-  { id: 'p7', t: 'Véhicule qui monte une côte', p: { obj: 'vehicule', m: 1000, alpha: 8, surf: 'faible', mvt: 'vcte', sens: -1, vc: 4 },
+  { id: 'p7', t: 'Monte une côte', p: { obj: 'vehicule', m: 1000, alpha: 8, surf: 'faible', mvt: 'vcte', sens: -1, vc: 4 },
     d: 'Montée d\'une côte de 8° à vitesse constante : la force motrice compense exactement Pₓ et la résistance. Somme des forces nulle.' },
-  { id: 'p13', t: 'Véhicule qui descend en freinant', p: { obj: 'vehicule', m: 1000, alpha: 10, surf: 'faible', mvt: 'vcte', sens: 1, vc: 4 },
+  { id: 'p13', t: 'Descend en freinant', p: { obj: 'vehicule', m: 1000, alpha: 10, surf: 'faible', mvt: 'vcte', sens: 1, vc: 4 },
     d: 'Descente à vitesse constante : la route doit maintenant retenir le véhicule. La force de la route s\'oppose au mouvement : c\'est un freinage.' },
-  { id: 'p12', t: 'Force motrice insuffisante : le véhicule recule', p: { obj: 'vehicule', m: 1000, alpha: 15, surf: 'faible', mvt: 'pousse', sens: -1, Fp: 1500, perm: true, dur: 2, v0: 5 },
+  { id: 'p12', t: 'Moteur trop faible : elle recule', p: { obj: 'vehicule', m: 1000, alpha: 15, surf: 'faible', mvt: 'pousse', sens: -1, Fp: 1500, perm: true, dur: 2, v0: 5 },
     d: 'Le véhicule aborde la côte à 5 m/s avec une force motrice de 1 500 N. F < Pₓ + f : il ralentit, s\'arrête, puis recule en marche arrière, toujours tourné vers le haut.' },
-  { id: 'p9', t: 'Glissement à vitesse constante', adv: true, p: { obj: 'cube', m: 2, alpha: 20, surf: 'perso', muPerso: +Math.tan(rad(20)).toFixed(3), mvt: 'lancer', sens: 1, v0: 3 },
+  { id: 'p9', t: 'Glisse à vitesse constante (μ = tan α)', adv: true, p: { obj: 'cube', m: 2, alpha: 20, surf: 'perso', muPerso: +Math.tan(rad(20)).toFixed(3), mvt: 'lancer', sens: 1, v0: 3 },
     d: 'Ici μ = tan α : Pₓ est exactement compensée par le frottement. Une fois lancé, le cube glisse à vitesse constante.' }
 ];
 const SIT_RES = [
   { id: 'r1', o: 'h', t: 'Ressort à vide (au repos)', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 0, damp: 'aucun' }, d: 'Le ressort a sa longueur à vide l₀ : il n\'exerce aucune force (T = 0). Réglez l\'étirement dans le panneau (Mouvement).' },
   { id: 'r2', o: 'h', t: 'Ressort étiré puis lâché', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 0.10, damp: 'aucun' }, d: 'Ressort étiré de 10 cm puis lâché : la force de rappel ramène la masse vers l\'équilibre, elle oscille.' },
   { id: 'r3', o: 'h', t: 'Ressort comprimé puis lâché', p: { kp: 'moyen', k: 50, m: 0.5, dl0: -0.08, damp: 'aucun' }, d: 'Ressort comprimé de 8 cm : la force de rappel pousse la masse, toujours vers la position d\'équilibre.' },
-  { id: 'r6', o: 'h', t: 'Oscillations amorties', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 0.12, damp: 'fort' }, d: 'Les frottements dissipent l\'énergie : l\'amplitude diminue jusqu\'à l\'arrêt.' },
+  { id: 'r6', o: 'h', t: 'Oscillations amorties', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 0.12, damp: 'moyen' }, d: 'Les frottements dissipent l\'énergie : l\'amplitude diminue jusqu\'à l\'arrêt.' },
   { id: 'r4', o: 'v', t: 'Masse suspendue à l\'équilibre', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 'eq', damp: 'aucun' }, d: 'La masse est immobile : la tension compense exactement le poids, T = P donc k·Δl = m·g.' },
   { id: 'r5', o: 'v', t: 'Masse lâchée depuis la longueur à vide', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 0, damp: 'aucun' }, d: 'On lâche la masse alors que le ressort a sa longueur à vide : elle oscille autour de l\'équilibre.' },
   { id: 'r8', o: 'i', t: 'Masse à l\'équilibre sur un plan incliné', p: { kp: 'moyen', k: 50, m: 0.5, dl0: 'eq', damp: 'aucun' }, d: 'Plan incliné à 45° sans frottement. À l\'équilibre, la tension compense la composante du poids le long du plan : k·Δl = m·g·sin 45°.' },
@@ -447,8 +472,8 @@ const SIT_PROJ = [
   { id: 'q5', t: 'Tir à 30° puis à 60°', p: { type: 'oblique', m: 0.5, h0: 0, v0: 15, theta: 30 }, d: 'Notez la portée à 30°, puis réglez l\'angle à 60° : la portée est la même (angles complémentaires), mais la flèche est plus haute.' }
 ];
 const KPRESET = { souple: { t: 'Ressort souple — k = 10 N/m', k: 10 }, moyen: { t: 'Ressort moyen — k = 50 N/m', k: 50 }, raide: { t: 'Ressort raide — k = 200 N/m', k: 200 }, libre: { t: 'Raideur libre (5 à 300 N/m)', k: null } };
-const DAMP = { aucun: { t: 'Aucun — comme dans le vide (idéal)', z: 0 }, faible: { t: 'Faible — air', z: 0.04 }, fort: { t: 'Fort — huile ou eau', z: 0.15 } };
-const AIR = { aucun: { t: 'Aucun — air négligé (idéal)', c: 0 }, faible: { t: 'Faible — balle lourde', c: 0.08 }, fort: { t: 'Fort — balle légère', c: 0.35 } };
+const DAMP = { aucun: { t: 'Aucun — comme dans le vide (idéal)', z: 0 }, faible: { t: 'Faible — air', z: 0.04 }, moyen: { t: 'Moyen — eau', z: 0.12 }, fort: { t: 'Fort — huile', z: 0.3 } };
+const AIR = { aucun: { t: 'Aucun — air négligé (idéal)', c: 0 }, faible: { t: 'Faible — balle lourde', c: 0.05 }, moyen: { t: 'Moyen — ballon', c: 0.15 }, fort: { t: 'Fort — balle légère', c: 0.35 } };
 const ORI = { h: { t: '0° — horizontal', b: 0 }, i: { t: '45° — incliné', b: 45 }, v: { t: '90° — vertical', b: 90 } };
 const Y_I = 1.25;
 const fricName = t => t.split(' — ')[0].toLowerCase();
@@ -459,7 +484,7 @@ const PTYPE = { chute: 'Chute libre (lâcher)', vertical: 'Lancer vertical vers 
    ===================================================================== */
 const S = {
   mode: 'eleve', g: 10, tab: 'plan', view: 'profil', running: false, slow: false, autoPause: true,
-  bt: 'eq', hl: null, z: 1, panel: true,
+  bt: 'eq', hl: null, z: 1, panel: true, ptab: 'reglages',
   show: { forces: true, valeurs: true, chrono: true, cotes: true, comp: true, axes: true, fiche: true }, open: {},
   plan: { sit: 'standard', sitId: 'p2', obj: 'cube', m: 2, alpha: 30, surf: 'aucun', muPerso: 0.3, mvt: 'lacher', sens: 1, v0: 3, vc: 3, Fp: 20, dur: 1, perm: false, s0: null },
   res: { sit: 'standard', sitId: 'r2', orient: 'h', kp: 'moyen', k: 50, m: 0.5, dl0: 0.10, damp: 'aucun' },
@@ -519,7 +544,7 @@ function init3D() {
 function resize() {
   if (!renderer) return;
   const st = $('#stage'), w = st.clientWidth, hh = st.clientHeight; if (!w || !hh) return;
-  renderer.setSize(w, hh, false); renderer.domElement.style.width = w + 'px'; renderer.domElement.style.height = hh + 'px';
+  kick(); renderer.setSize(w, hh, false); renderer.domElement.style.width = w + 'px'; renderer.domElement.style.height = hh + 'px';
   camP.aspect = w / hh; camP.updateProjectionMatrix();
   if (S.tab === 'proj') fitProj();
 }
@@ -1249,7 +1274,7 @@ function loop(now) {
     acc += dt * (S.slow ? 0.2 : 1); let n = 0;
     while (acc >= DT && n < 3000) { stepSim(DT); acc -= DT; n++; if (!S.running) { acc = 0; break; } }
   }
-  if (HAS3D) {
+  if (HAS3D && (S.running || S.hl || now - lastKick < 1500)) {
     if (S.tab === 'plan') planVisual(); else if (S.tab === 'ressort') resVisual(); else projVisual();
     updateCamera(); renderer.render(scene, curCam()); updateLabels();
   }
@@ -1289,7 +1314,8 @@ function drawGraph() {
 const eq = (k, f, x) => `<div class="eq" ${k ? `data-k="${k}"` : ''}><span class="dot" style="background:${k && FC[k] ? hex(FC[k]) : '#64748b'}"></span><div><div class="f">${f}</div>${x ? `<div class="x">${x}</div>` : ''}</div></div>`;
 const nm = (k, html) => `<span class="${FT[k] === 'd' ? 'nd' : 'nc'}">${html}</span>`;
 const AUT = { cube: 'le cube', sphere: 'la bille', vehicule: 'la voiture' };
-const OBJ_ORDER = ['sphere', 'vehicule', 'cube'];
+const GROUPS = { plan: [['cube', 'Cube'], ['vehicule', 'Voiture'], ['sphere', 'Bille']], ressort: [['h', 'Ressort horizontal (0°)'], ['i', 'Ressort incliné (45°)'], ['v', 'Ressort vertical (90°)']], proj: [['chute', 'Chute libre'], ['vertical', 'Lancer vertical'], ['oblique', 'Lancer avec un angle']] };
+const OBJ_ORDER = ['cube', 'vehicule', 'sphere'];
 const gS = () => fmt(S.g, S.g === 10 ? 0 : 1);
 
 /** Liste des forces de la situation courante (sert au bilan et au diagramme). */
@@ -1314,7 +1340,7 @@ function forcesList() {
     const inc = r.orient === 'i', axe = hor ? 'horizontale' : inc ? 'parallèle au plan' : 'verticale';
     if (r.orient !== 'v') L.push({ k: 'Rn', nom: inc ? 'Réaction du plan' : 'Réaction de la table', aut: inc ? 'le plan incliné' : 'la table', ico: '🪵', rec: 'la masse', type: 'c', dir: inc ? 'perpendiculaire au plan' : 'verticale', sens: inc ? 's\'éloigne du plan' : 'vers le haut', val: f.Rn });
     L.push({ k: 'T', nom: 'Tension du ressort', aut: 'le ressort', ico: '🌀', rec: 'la masse', type: 'c', dir: axe, sens: Math.abs(f.T) < 1e-9 ? '— (ressort à vide)' : hor ? (f.T < 0 ? 'vers le mur' : 's\'éloigne du mur') : inc ? (f.T < 0 ? 'vers le haut du plan' : 'vers le bas du plan') : (f.T < 0 ? 'vers le haut' : 'vers le bas'), val: Math.abs(f.T) });
-    if (r.damp !== 'aucun') L.push({ k: 'fd', nom: 'Frottement (amortissement)', aut: r.damp === 'fort' ? 'le liquide' : 'l\'air', ico: '💨', rec: 'la masse', type: 'c', dir: axe, sens: 'opposé à la vitesse', val: Math.abs(f.fd) });
+    if (r.damp !== 'aucun') L.push({ k: 'fd', nom: 'Frottement (amortissement)', aut: r.damp === 'faible' ? 'l\'air' : 'le liquide', ico: '💨', rec: 'la masse', type: 'c', dir: axe, sens: 'opposé à la vitesse', val: Math.abs(f.fd) });
   } else {
     const q = S.proj;
     L.push({ k: 'P', nom: 'Poids', aut: 'la Terre', ico: '🌍', rec: 'la balle', type: 'd', dir: 'verticale', sens: 'vers le bas', val: q.m * S.g });
@@ -1430,7 +1456,7 @@ function statusPlan(d) {
   if (PS.ended) return 'Fin de piste : cliquez sur Réinitialiser.';
   if (d.regime === 'repos') return 'Immobile : les forces se compensent.';
   if (d.regime === 'vcte') return Math.abs(d.Fu) < 1e-9 ? 'Vitesse constante sans force motrice : principe d\'inertie.' : (d.Fu * p.sens < 0 ? 'Vitesse constante en descente : la route freine le véhicule.' : 'Vitesse constante : la force motrice compense le reste.');
-  if (d.regime === 'roule-glisse') return 'Pente trop raide pour cette surface : la bille roule en glissant.';
+  if (d.regime === 'roule-glisse') return 'La bille roule en glissant : l\'adhérence ne suffit pas pour rouler sans glisser.';
   if (Math.abs(d.a) < 2e-3 && PS.v !== 0) return 'Vitesse constante : les forces se compensent.';
   if (!S.running && PS.t === 0) return 'Prêt : appuyez sur Lecture (barre d\'espace).';
   if (p.obj === 'vehicule' && p.mvt === 'pousse' && PS.v * p.sens < 0) return 'Le véhicule recule (marche arrière) : la force motrice ne compense pas.';
@@ -1442,11 +1468,11 @@ function updateReadouts() {
   if (S.tab === 'plan') { const d = planDyn(); html = planEquations(d); st = statusPlan(d); $('#readout').textContent = `t = ${fmt(PS.t, 2)} s · v = ${fmt(Math.abs(PS.v), 2)} m/s`; }
   else if (S.tab === 'ressort') {
     const f = resForces(); html = resEquations(f); const atEq = Math.abs(RS.v) < 2e-3 && Math.abs(f.a) < 0.02;
-    st = atEq ? 'Équilibre : les forces se compensent.' : (!S.running && RS.t === 0 ? 'Prêt : appuyez sur Lecture, ou tirez la masse à la souris.' : 'Oscillation autour de la position d\'équilibre.');
+    st = atEq ? 'Équilibre : les forces se compensent.' : (!S.running && RS.t === 0 ? 'Prêt : appuyez sur Lecture (barre d\'espace).' : 'Oscillation autour de la position d\'équilibre.');
     $('#readout').textContent = `t = ${fmt(RS.t, 2)} s · Δl = ${fmt(RS.x * 100, 1)} cm`;
   } else {
     html = projEquations(); const s = projAt(QS.t);
-    st = QS.landed ? 'Au sol.' : QS.t === 0 ? 'Prêt : appuyez sur Lecture. Glissez le rond jaune pour viser.' : 'En vol : seul le poids agit.';
+    st = QS.landed ? 'Au sol.' : QS.t === 0 ? 'Prêt : appuyez sur Lecture (barre d\'espace).' : (airC() > 0 ? 'En vol : le poids et le frottement de l\'air agissent.' : 'En vol : seul le poids agit.');
     $('#readout').textContent = `t = ${fmt(QS.t, 2)} s · x = ${fmt(s.x, 1)} m · y = ${fmt(s.y, 1)} m`;
   }
   if (S.bt === 'bilan') html = bilanHTML(); else if (S.bt === 'doi') html = doiHTML();
@@ -1468,9 +1494,9 @@ function ficheHTML() {
 function updateInfo() {
   let t, d;
   const sitOf = (L, st) => L.find(x => x.id === st.sitId);
-  if (S.tab === 'plan') { const p = S.plan; if (p.sit === 'standard') { const s = sitOf(SIT_PLAN, p); t = s.t; d = s.d; } else { t = 'Situation libre — ' + OBJ[p.obj].t; d = 'Réglez les paramètres dans le panneau : flèches et équations suivent instantanément.'; } }
-  else if (S.tab === 'ressort') { const r = S.res; if (r.sit === 'standard') { const s = sitOf(SIT_RES, r); t = s.t; d = s.d; } else { t = 'Situation libre — ressort ' + ORI[r.orient].t; d = 'Choisissez le ressort, la masse et l\'étirement initial dans le panneau, puis lancez.'; } }
-  else { const q = S.proj; if (q.sit === 'standard') { const s = sitOf(SIT_PROJ, q); t = s.t; d = s.d; } else { t = 'Situation libre — ' + PTYPE[q.type]; d = 'Réglez le lancement dans le panneau, puis lancez.'; } }
+  if (S.tab === 'plan') { const p = S.plan; if (p.sit === 'standard') { const s = sitOf(SIT_PLAN, p); t = OBJ[s.p.obj].t + ' — ' + s.t; d = s.d; } else { t = 'Réglages libres — ' + OBJ[p.obj].t; d = 'Flèches, équations et fiche suivent instantanément vos réglages.'; } }
+  else if (S.tab === 'ressort') { const r = S.res; if (r.sit === 'standard') { const s = sitOf(SIT_RES, r); t = s.t; d = s.d; } else { t = 'Réglages libres — ressort ' + ORI[r.orient].t; d = 'Choisissez le ressort, la masse et l\'étirement initial dans le panneau, puis lancez.'; } }
+  else { const q = S.proj; if (q.sit === 'standard') { const s = sitOf(SIT_PROJ, q); t = s.t; d = s.d; } else { t = 'Réglages libres — ' + PTYPE[q.type]; d = 'Réglez le lancement dans le panneau, puis lancez.'; } }
   $('#infoT').textContent = t; $('#infoD').textContent = d;
   if (S.g === 1.6 && !warnMsg) warnMsg = 'Sur la Lune, la masse ne change pas mais le poids est environ 6 fois plus faible.';
   $('#viewHint').textContent = S.view === 'profil' ? 'Vue de profil : glissez sur la scène pour remonter le temps. Réglages dans le panneau.' : 'Vue 3D : glissez pour tourner, molette pour zoomer.';
@@ -1495,27 +1521,51 @@ function sliderRow(o) {
   const unit = o.unit ? ' ' + o.unit : '';
   const val = h('span', { class: 'val' }, fmt(o.value, o.dig) + unit);
   const inp = h('input', { type: 'range', min: o.min, max: o.max, step: o.step, value: o.value, disabled: o.dis });
-  inp.addEventListener('input', () => { const v = parseFloat(inp.value); val.textContent = fmt(v, o.dig) + unit; o.on(v); });
+  inp.addEventListener('input', () => { const v = parseFloat(inp.value); val.textContent = fmt(v, o.dig) + unit; markLibre(); o.on(v); });
   if (o.end) inp.addEventListener('change', () => o.end());
   return h('div', { class: 'ctrl' + (o.dis ? ' locked' : '') + (o.ped ? ' ped' : '') }, h('div', { class: 'ctrl-h' }, h('label', {}, o.label), val), inp,
     h('div', { class: 'hint' }, `Plage : ${fmt(o.min, o.dig)} à ${fmt(o.max, o.dig)}${unit}` + (o.hint ? ' — ' + o.hint : '')));
 }
 function selectRow(o) {
   const s = h('select', { disabled: o.dis }, o.options.map(([v, t]) => { const op = h('option', { value: v }, t); if (String(v) === String(o.value)) op.selected = true; return op; }));
-  s.addEventListener('change', () => o.on(s.value));
+  s.addEventListener('change', () => { markLibre(); o.on(s.value); });
   return h('div', { class: 'ctrl' + (o.dis ? ' locked' : '') }, h('div', { class: 'ctrl-h' }, h('label', {}, o.label)), s, o.hint ? h('div', { class: 'hint' }, o.hint) : null);
+}
+function radio(opts, val, onPick) { return h('div', { class: 'ropt' }, opts.map(([v, t, dis]) => h('button', { class: String(v) === String(val) ? 'on' : '', disabled: !!dis, onclick: () => { markLibre(); onPick(v); } }, t))); }
+function quick(opts, val, onPick) { return h('div', { class: 'quick' }, opts.map(([v, t]) => h('button', { class: Math.abs(v - val) < 1e-6 ? 'on' : '', onclick: () => { markLibre(); onPick(v); } }, t))); }
+function fricRow(label, list, val, onPick, hintFn) {
+  const cur = list.find(x => x.id === val) || list[0];
+  return h('div', { class: 'ctrl' }, h('div', { class: 'ctrl-h' }, h('label', {}, label)),
+    h('div', { class: 'seg full' }, list.map(x => h('button', { class: x.id === val ? 'on' : '', title: x.t, onclick: () => { markLibre(); onPick(x.id); } }, x.id === 'perso' ? 'μ' : x.t.split(' — ')[0]))),
+    h('div', { class: 'hint' }, cur.t.split(' — ')[1] ? cur.t.split(' — ')[0] + ' : ' + cur.t.split(' — ')[1] + (hintFn ? hintFn(cur) : '') : ''));
 }
 function chk(label, key, after) {
   const i = h('input', { type: 'checkbox' }); i.checked = key === 'auto' ? S.autoPause : S.show[key];
-  i.addEventListener('change', () => { if (key === 'auto') S.autoPause = i.checked; else S.show[key] = i.checked; if (key === 'chrono' && !i.checked) clearChrono(); if (after) after(); });
+  i.addEventListener('change', () => { if (key === 'auto') S.autoPause = i.checked; else S.show[key] = i.checked; if (key === 'chrono' && !i.checked) clearChrono(); if (after) after(); saveState(); });
   return h('label', { class: 'chk' }, i, label);
 }
-function sitCard(tabKey, st, list, onApply) {
-  const lock = st.sit === 'standard', items = list.filter(s => isAdv() || !s.adv);
-  return card('Situation',
-    seg([['standard', 'Standard'], ['libre', 'Libre']], st.sit, v => { st.sit = v; resetSteps(); if (v === 'standard') onApply((items.find(s => s.id === st.sitId) || items[0]).id); else paramChanged(true); }),
-    h('p', { class: 'note' }, lock ? 'Choisissez une situation toute prête. Seule la grandeur surlignée en jaune reste réglable ; pour tout modifier, choisissez « Libre ».' : 'Suivez les étapes 1 à 4 : chaque choix fait passer à l\'étape suivante.'),
-    lock ? h('div', { class: 'sitlist' }, items.map(s => h('button', { class: 'sit' + (s.id === st.sitId ? ' on' : ''), onclick: () => onApply(s.id) }, h('span', {}, s.t), s.adv ? h('span', { class: 'badge' }, 'Avancé') : null))) : null);
+const curSt = () => S.tab === 'plan' ? S.plan : S.tab === 'ressort' ? S.res : S.tab === 'proj' ? S.proj : null;
+const curSits = () => S.tab === 'plan' ? SIT_PLAN : S.tab === 'ressort' ? SIT_RES : SIT_PROJ;
+/** Dès qu'on modifie un réglage, on quitte l'exemple (on le garde comme référence pour y revenir). */
+function markLibre() { const st = curSt(); if (st && st.sit === 'standard') { st.sit = 'libre'; setTimeout(() => { const t = $('#exTag'); if (t) t.replaceWith(exTag()); updateInfo(); }, 0); } }
+function exTag() {
+  const st = curSt(), ex = curSits().find(x => x.id === st.sitId);
+  const box = h('div', { class: 'extag', id: 'exTag' });
+  if (st.sit === 'standard' && ex) box.append(h('span', { html: `Exemple : <b>${ex.t}</b>` }));
+  else { box.append(h('span', {}, 'Réglages libres')); if (ex) box.append(h('button', { class: 'btn', style: 'min-height:32px;padding:4px 9px', onclick: () => applySit(S.tab, ex.id) }, '↺ Revenir à l\'exemple')); }
+  return box;
+}
+/** En-tête du panneau : deux onglets bien séparés, Exemples (situations prédéfinies) et Réglages. */
+function sitCard() {
+  return h('div', { class: 'card exhead' }, seg([['exemples', '📚 Exemples'], ['reglages', '⚙ Réglages']], S.ptab, v => { S.ptab = v; renderPanel(); }), exTag());
+}
+function examplesList() {
+  const st = curSt(), key = S.tab === 'plan' ? s => s.p.obj : S.tab === 'ressort' ? s => s.o : s => s.p.type;
+  return GROUPS[S.tab].map(([g, title]) => {
+    const items = curSits().filter(s => key(s) === g && (isAdv() || !s.adv)); if (!items.length) return null;
+    return h('div', { class: 'card exgrp' }, h('h4', {}, title), items.map(s => h('button', { class: 'excard' + (s.id === st.sitId && st.sit === 'standard' ? ' on' : ''), onclick: () => { S.ptab = 'reglages'; applySit(S.tab, s.id); $('#panel').scrollTop = 0; } },
+      h('b', {}, s.t + (s.adv ? '  · Avancé' : '')), h('span', {}, s.d.split('. ')[0].replace(/\.$/, '') + '.'))));
+  });
 }
 /** Section repliable numérotée, avec un résumé visible quand elle est repliée. */
 /* Étapes en accordéon : une seule ouverte à la fois ; un choix fait replie l'étape et ouvre la suivante. */
@@ -1525,20 +1575,21 @@ function stepOpen(n) {
   const st = S.tab === 'plan' ? S.plan : S.tab === 'ressort' ? S.res : S.proj;
   return st.sit === 'standard' ? n === PED_STEP[S.tab] : n === 1;
 }
-function goStep(n) { for (let k = 1; k <= 4; k++) S.open[S.tab + k] = (k === n); }
-function resetSteps() { for (let k = 1; k <= 4; k++) delete S.open[S.tab + k]; }
-function sec(n, title, sum, ...kids) {
-  const aff = title === 'Affichage', key = S.tab + n, d = h('details', { class: 'sec' + (aff ? ' aff' : '') });
-  d.open = aff ? S.open[key] === true : stepOpen(n);
-  d.addEventListener('toggle', () => {
-    S.open[key] = d.open;
-    if (d.open && !aff) document.querySelectorAll('#panel details.sec:not(.aff)').forEach(o => { if (o !== d && o.open) o.open = false; });
-  });
-  d.append(h('summary', {}, h('span', { class: 'num' }, String(n)), h('span', {}, title), h('span', { class: 'sum' }, sum)), h('div', { class: 'body' }, ...kids.flat()));
-  return d;
+function goStep(n) { }
+function resetSteps() { }
+/** Étape numérotée, toujours visible (pas de repli automatique). */
+function sec(n, title, ...kids) {
+  if (title === 'Affichage') {
+    const sum = kids.shift();
+    const d = h('details', { class: 'sec aff' }); d.open = S.open[S.tab + 'aff'] === true;
+    d.addEventListener('toggle', () => { S.open[S.tab + 'aff'] = d.open; });
+    d.append(h('summary', {}, h('span', { class: 'num' }, '👁'), h('span', {}, title), h('span', { class: 'sum' }, sum)), h('div', { class: 'body' }, ...kids.flat()));
+    return d;
+  }
+  return h('div', { class: 'step' + (n === 1 && S.tab !== 'plan' ? ' fixed' : '') }, h('h3', {}, h('span', { class: 'num' }, String(n)), title), ...kids.flat());
 }
 function displayCard() {
-  return sec('👁', 'Affichage', 'flèches, axes, fiche…', chk('Flèches des forces', 'forces'), chk('Valeurs des forces', 'valeurs'), chk('Axes x et y', 'axes'), chk('Fiche A → B (départ / instant)', 'fiche', () => updateReadouts()),
+  return sec(0, 'Affichage', 'flèches, axes, fiche…', chk('Flèches des forces', 'forces'), chk('Valeurs des forces', 'valeurs'), chk('Axes x et y', 'axes'), chk('Fiche A → B (départ / instant)', 'fiche', () => updateReadouts()),
     chk('Chronophotographie', 'chrono'), chk('Cotes et position de départ', 'cotes'), chk('Pauses automatiques aux moments clés', 'auto'),
     isAdv() && S.tab !== 'ressort' ? chk(S.tab === 'proj' ? 'Composantes vₓ et vᵧ' : 'Composantes Pₓ et Pᵧ', 'comp') : null);
 }
@@ -1563,8 +1614,12 @@ function departTxt() {
 }
 function departCard() { return h('div', { class: 'depart' }, h('h3', {}, 'Au départ'), h('p', { id: 'departP' }, departTxt())); }
 function renderPanel() {
-  const P = $('#panel'); P.innerHTML = '';
-  if (S.tab === 'plan') P.append(...planPanel()); else if (S.tab === 'ressort') P.append(...resPanel()); else if (S.tab === 'proj') P.append(...projPanel());
+  const P = $('#panel'), top = P.scrollTop; P.innerHTML = '';
+  if (!simTab()) return;
+  P.append(sitCard());
+  if (S.ptab === 'exemples') P.append(...examplesList().filter(Boolean));
+  else if (S.tab === 'plan') P.append(...planPanel()); else if (S.tab === 'ressort') P.append(...resPanel()); else P.append(...projPanel());
+  P.scrollTop = top; saveState();
   updateInfo(); updateLegend(); updateReadouts();
 }
 function paramChanged(rebuild = false) {
@@ -1576,40 +1631,35 @@ function paramChanged(rebuild = false) {
   if (rebuild) renderPanel(); else { updateInfo(); updateLegend(); updateReadouts(); const dp = $('#departP'); if (dp) dp.textContent = departTxt(); }
 }
 function planPanel() {
-  const p = S.plan, lock = p.sit === 'standard', adv = isAdv(), O = OBJ[p.obj], veh = p.obj === 'vehicule', ball = p.obj === 'sphere';
-  const sens0 = p.alpha === 0 ? [[1, 'Vers la droite'], [-1, 'Vers la gauche']] : [[-1, 'Vers le haut de la pente'], [1, 'Vers le bas de la pente']];
-  const surf = surfList().filter(s => !s.adv || adv).map(s => [s.id, s.t + (adv && s.mu !== null ? ` (μ = ${fmt(s.mu, 2)})` : '')]);
+  const p = S.plan, adv = isAdv(), O = OBJ[p.obj], veh = p.obj === 'vehicule', ball = p.obj === 'sphere';
+  const sens0 = p.alpha === 0 ? [[1, 'Vers la droite →'], [-1, '← Vers la gauche']] : [[-1, 'Vers le haut de la pente'], [1, 'Vers le bas de la pente']];
+  const sl = surfList().filter(s => !s.adv || adv);
   const sCur = surfList().find(s => s.id === p.surf) || surfList()[0];
-  const mOpts = [['lacher', ball ? 'Roule seule (lâchée sans vitesse)' : veh ? 'Roue libre (lâchée sans vitesse)' : 'Glisse seul (lâché sans vitesse)'], ['lancer', 'Lancé avec une vitesse'], ['pousse', veh ? 'Tiré par le moteur (force motrice)' : 'Poussé par une force (la main)']].concat(veh ? [['vcte', 'À vitesse constante (le moteur s\'ajuste)']] : []);
-  const mSum = { lacher: 'lâché', lancer: 'lancé à ' + fmt(p.v0, 1) + ' m/s', pousse: (veh ? 'moteur ' : 'poussée ') + fmt(p.Fp, 0) + ' N', vcte: 'v constante ' + fmt(p.vc, 1) + ' m/s' }[p.mvt];
-  const pick = (n, fn) => v => { fn(v); goStep(n + 1); paramChanged(true); };
-  return [sitCard('plan', p, SIT_PLAN, id => applySit('plan', id)),
-    sec(1, 'Objet', `${O.t} · ${fmt(p.m, O.mDig)} kg`,
-      selectRow({ label: 'Objet étudié', dis: lock, value: p.obj, options: OBJ_ORDER.map(k => [k, OBJ[k].t]), on: pick(1, v => {
-        p.obj = v; const o = OBJ[v]; p.m = o.mDef; p.alpha = Math.min(p.alpha, o.aMax); p.s0 = null; p.Fp = v === 'vehicule' ? 3000 : 20; p.perm = v === 'vehicule';
-        if (!surfList().some(s => s.id === p.surf)) p.surf = 'aucun'; if (v !== 'vehicule' && p.mvt === 'vcte') p.mvt = 'lacher'; cameraDefaults(); }) }),
-      sliderRow({ label: 'Masse m', dis: lock, min: O.mMin, max: O.mMax, step: O.mStep, value: p.m, dig: O.mDig, unit: 'kg', on: v => { p.m = v; paramChanged(); }, end: () => renderPanel() })),
-    sec(2, 'Support', p.alpha === 0 ? 'plat' : 'incliné · ' + p.alpha + '°',
-      h('div', { class: 'ctrl' + (lock ? ' locked' : '') }, h('div', { class: 'ctrl-h' }, h('label', {}, 'Type de support')),
-        seg([['plat', 'Plat'], ['incl', 'Incliné']], p.alpha === 0 ? 'plat' : 'incl', v => {
-          if (lock) return; if (v === 'plat') { p.alpha = 0; goStep(3); } else if (p.alpha === 0) p.alpha = veh ? 8 : 20;
-          p.s0 = null; paramChanged(true); })),
-      p.alpha > 0 || lock ? sliderRow({ label: 'Angle de la pente α', ped: lock, min: lock ? 0 : 1, max: O.aMax, step: 1, value: p.alpha, dig: 0, unit: '°',
-        hint: veh ? 'au-delà de 20° (≈ 36 %), une route n\'est plus praticable' : null, on: v => { p.alpha = v; p.s0 = null; paramChanged(); }, end: () => renderPanel() }) : null),
-    sec(3, 'Mouvement', mSum + (p.mvt !== 'lacher' ? ' · ' + sensTxt(p.sens) : ''),
-      selectRow({ label: 'Type de déplacement', dis: lock, value: p.mvt, options: mOpts, on: v => {
-        p.mvt = v; if (v === 'pousse' && veh) p.perm = true; if (v === 'lancer' && p.v0 < 0.5) p.v0 = 3; p.s0 = null; paramChanged(true); },
-        hint: veh ? null : 'La vitesse constante imposée est réservée à la voiture (elle a un moteur).' }),
+  return [
+    sec(1, 'Objet',
+      h('div', { class: 'seg full', style: 'margin-bottom:12px' }, OBJ_ORDER.map(k => h('button', { class: k === p.obj ? 'on' : '', onclick: () => {
+        markLibre(); p.obj = k; const o = OBJ[k]; p.m = o.mDef; p.alpha = Math.min(p.alpha, o.aMax); p.s0 = null; p.Fp = k === 'vehicule' ? 3000 : 20; p.perm = k === 'vehicule';
+        if (!surfList().some(s => s.id === p.surf)) p.surf = 'aucun'; if (k !== 'vehicule' && p.mvt === 'vcte') p.mvt = 'lacher'; cameraDefaults(); paramChanged(true); } }, OBJ[k].t))),
+      sliderRow({ label: 'Masse m', min: O.mMin, max: O.mMax, step: O.mStep, value: p.m, dig: O.mDig, unit: 'kg', on: v => { p.m = v; paramChanged(); }, end: () => renderPanel() })),
+    sec(2, 'Mouvement',
+      radio([['lacher', 'Vitesse initiale nulle — ' + (ball ? 'lâchée' : 'lâché')], ['lancer', 'Vitesse initiale — ' + (ball ? 'lancée' : 'lancé')], ['pousse', veh ? 'Force du moteur (réglable)' : 'Force de la main (poussée)'], ['vcte', 'Vitesse constante (moteur)', !veh]], p.mvt, v => {
+        p.mvt = v; if (v === 'pousse' && veh) p.perm = true; if (v === 'lancer' && p.v0 < 0.5) p.v0 = 3; p.s0 = null; paramChanged(true); }),
+      !veh ? h('div', { class: 'hint', style: 'margin:-6px 0 10px' }, 'La vitesse constante imposée demande un moteur : choisissez la voiture.') : null,
       p.mvt === 'pousse' ? [
-        sliderRow({ label: veh ? 'Force motrice F' : 'Force de poussée F', dis: lock, min: 0, max: O.fMax, step: O.fStep, value: Math.min(p.Fp, O.fMax), dig: 0, unit: 'N', on: v => { p.Fp = v; paramChanged(); }, end: () => renderPanel() }),
-        selectRow({ label: 'Durée de la force', dis: lock, value: p.perm ? 'perm' : p.dur, options: [[0.5, '0,5 s'], [1, '1 s'], [2, '2 s'], [3, '3 s'], [5, '5 s'], ['perm', 'Permanente']], on: v => { if (v === 'perm') p.perm = true; else { p.perm = false; p.dur = +v; } paramChanged(true); },
+        sliderRow({ label: veh ? 'Force motrice F' : 'Force de poussée F', min: 0, max: O.fMax, step: O.fStep, value: Math.min(p.Fp, O.fMax), dig: 0, unit: 'N', on: v => { p.Fp = v; paramChanged(); }, end: () => renderPanel() }),
+        selectRow({ label: 'Durée de la force', value: p.perm ? 'perm' : p.dur, options: [[0.5, '0,5 s'], [1, '1 s'], [2, '2 s'], [3, '3 s'], [5, '5 s'], ['perm', 'Permanente']], on: v => { if (v === 'perm') p.perm = true; else { p.perm = false; p.dur = +v; } paramChanged(true); },
           hint: 'Quand la force s\'arrête, sa flèche devient pâle : observez la suite.' })] : null,
-      (p.mvt === 'lancer' || p.mvt === 'pousse') ? sliderRow({ label: p.mvt === 'lancer' ? 'Vitesse de lancement v₀' : 'Vitesse au départ v₀', dis: lock, min: p.mvt === 'lancer' ? 0.5 : 0, max: 10, step: 0.5, value: Math.max(p.v0, p.mvt === 'lancer' ? 0.5 : 0), dig: 1, unit: 'm/s', on: v => { p.v0 = v; paramChanged(); }, end: () => renderPanel() }) : null,
-      p.mvt === 'vcte' ? sliderRow({ label: 'Vitesse constante v', dis: lock, min: 1, max: 10, step: 0.5, value: p.vc, dig: 1, unit: 'm/s', on: v => { p.vc = v; paramChanged(); }, end: () => renderPanel() }) : null,
-      p.mvt !== 'lacher' ? selectRow({ label: 'Sens du mouvement', dis: lock, value: p.sens, options: sens0, on: pick(3, v => { p.sens = +v; p.s0 = null; }) }) : h('div', { class: 'hint' }, p.alpha > 0 ? 'Lâché sans vitesse en haut de la pente.' : 'Sur un sol plat, un objet lâché sans vitesse reste immobile.')),
-    sec(4, 'Frottements', fricName(sCur.t),
-      selectRow({ label: veh ? 'Résistance de la route' : 'Frottements avec le support', dis: lock, value: p.surf, options: surf, on: v => { p.surf = v; goStep(0); paramChanged(true); }, hint: 'Les mêmes trois niveaux dans tous les onglets : aucun, faible, fort.' }),
-      (sCur.mu === null && adv) ? sliderRow({ label: 'Coefficient de frottement μ', dis: lock, min: 0, max: sCur.max, step: 0.01, value: p.muPerso, dig: 2, unit: '', on: v => { p.muPerso = v; paramChanged(); } }) : null),
+      (p.mvt === 'lancer' || p.mvt === 'pousse') ? sliderRow({ label: 'Vitesse initiale v₀', min: p.mvt === 'lancer' ? 0.5 : 0, max: 10, step: 0.5, value: Math.max(p.v0, p.mvt === 'lancer' ? 0.5 : 0), dig: 1, unit: 'm/s', on: v => { p.v0 = v; paramChanged(); }, end: () => renderPanel() }) : null,
+      p.mvt === 'vcte' ? sliderRow({ label: 'Vitesse constante v', min: 1, max: 10, step: 0.5, value: p.vc, dig: 1, unit: 'm/s', hint: 'la force du moteur s\'ajuste toute seule', on: v => { p.vc = v; paramChanged(); }, end: () => renderPanel() }) : null,
+      p.mvt !== 'lacher' ? selectRow({ label: 'Sens du mouvement', value: p.sens, options: sens0, on: v => { p.sens = +v; p.s0 = null; paramChanged(true); } }) : null),
+    sec(3, 'Support',
+      h('div', { class: 'seg full', style: 'margin-bottom:12px' }, [['plat', 'Plat'], ['incl', 'Incliné']].map(([v, t]) => h('button', { class: (p.alpha === 0 ? 'plat' : 'incl') === v ? 'on' : '', onclick: () => {
+        markLibre(); if (v === 'plat') p.alpha = 0; else if (p.alpha === 0) p.alpha = veh ? 10 : 30; p.s0 = null; paramChanged(true); } }, t))),
+      p.alpha > 0 ? [quick((veh ? [[5, '5°'], [10, '10°'], [15, '15°']] : [[15, '15°'], [30, '30°'], [45, '45°']]), p.alpha, v => { p.alpha = v; p.s0 = null; paramChanged(true); }),
+        sliderRow({ label: 'Angle de la pente α', min: 1, max: O.aMax, step: 1, value: p.alpha, dig: 0, unit: '°', hint: veh ? 'au-delà de 20° (≈ 36 %), une route n\'est plus praticable' : null, on: v => { p.alpha = v; p.s0 = null; paramChanged(); }, end: () => renderPanel() })] : null),
+    sec(4, 'Frottements',
+      fricRow(veh ? 'Résistance de la route' : 'Frottements avec le support', sl, p.surf, id => { p.surf = id; paramChanged(true); }, c => adv && c.mu !== null ? ` (μ = ${fmt(c.mu, 2)})` : ''),
+      (sCur.mu === null && adv) ? sliderRow({ label: 'Coefficient de frottement μ', min: 0, max: sCur.max, step: 0.01, value: p.muPerso, dig: 2, unit: '', on: v => { p.muPerso = v; paramChanged(); } }) : null),
     departCard(), displayCard()];
 }
 function clampRes() {
@@ -1618,41 +1668,43 @@ function clampRes() {
   const [a, b] = dlRange(); if (r.dl0 < a - 1e-9 || r.dl0 > b + 1e-9) { r.dl0 = clamp(r.dl0, a, b); if (!warnMsg) warnMsg = 'Étirement initial ajusté pour rester dans les limites du ressort.'; }
 }
 function resPanel() {
-  const r = S.res, lock = r.sit === 'standard', mMax = mMaxVert();
-  const list = SIT_RES.filter(s => s.o === r.orient);
-  return [sitCard('ressort', r, list, id => applySit('ressort', id)),
-    sec(1, 'Objet', `${fmt(r.m, 2)} kg · k = ${fmt(r.k, 0)} N/m`,
-      sliderRow({ label: 'Masse m', dis: lock, min: 0.1, max: mMax, step: 0.05, value: Math.min(r.m, mMax), dig: 2, unit: 'kg', hint: r.orient === 'h' ? null : `maximum ${fmt(mMax, 2)} kg avec ce ressort`, on: v => { r.m = v; paramChanged(); refreshDl(); }, end: () => renderPanel() }),
-      selectRow({ label: 'Ressort', dis: lock, value: r.kp, options: Object.entries(KPRESET).map(([k, o]) => [k, o.t]), on: v => { r.kp = v; if (v !== 'libre') { r.k = KPRESET[v].k; goStep(2); } paramChanged(true); }, hint: `Longueur à vide l₀ = ${fmt(L0 * 100, 0)} cm (constante)` }),
-      r.kp === 'libre' ? sliderRow({ label: 'Raideur k', dis: lock, min: 5, max: 300, step: 5, value: r.k, dig: 0, unit: 'N/m', on: v => { r.k = v; paramChanged(); refreshDl(); }, end: () => renderPanel() }) : null),
-    sec(2, 'Support', ORI[r.orient].t,
-      h('div', { class: 'ctrl' }, h('div', { class: 'ctrl-h' }, h('label', {}, 'Orientation du ressort')),
-        seg(Object.entries(ORI).map(([k, o]) => [k, o.t.split(' — ')[1]]), r.orient, v => { r.orient = v; goStep(3); if (HAS3D) buildResScene(); cameraDefaults(); if (r.sit === 'standard') applySit('ressort', SIT_RES.find(s => s.o === v).id); else paramChanged(true); }),
-        h('div', { class: 'hint' }, r.orient === 'h' ? '0° : masse sur une table, accrochée à un mur.' : r.orient === 'i' ? '45° : masse sur un plan incliné.' : '90° : masse suspendue à un support.'))),
-    sec(3, 'Mouvement', `Δl₀ = ${fmt(r.dl0 * 100, 1)} cm`, h('div', { id: 'dlSlot' }, dlSlider(lock))),
-    sec(4, 'Frottements', fricName(DAMP[r.damp].t),
-      selectRow({ label: 'Amortissement', dis: lock, value: r.damp, options: Object.entries(DAMP).map(([k, o]) => [k, o.t]), on: v => { r.damp = v; goStep(0); paramChanged(true); } })),
+  const r = S.res, mMax = mMaxVert(), eqv = dlEq();
+  return [
+    sec(1, 'Objet', h('div', { class: 'fixedObj' }, '▣ Masse accrochée au ressort'),
+      sliderRow({ label: 'Masse m', min: 0.1, max: mMax, step: 0.05, value: Math.min(r.m, mMax), dig: 2, unit: 'kg', hint: r.orient === 'h' ? null : `maximum ${fmt(mMax, 2)} kg avec ce ressort`, on: v => { r.m = v; paramChanged(); refreshDl(); }, end: () => renderPanel() }),
+      selectRow({ label: 'Ressort', value: r.kp, options: Object.entries(KPRESET).map(([k, o]) => [k, o.t]), on: v => { r.kp = v; if (v !== 'libre') r.k = KPRESET[v].k; paramChanged(true); }, hint: `Longueur à vide l₀ = ${fmt(L0 * 100, 0)} cm (constante)` }),
+      r.kp === 'libre' ? sliderRow({ label: 'Raideur k', min: 5, max: 300, step: 5, value: r.k, dig: 0, unit: 'N/m', on: v => { r.k = v; paramChanged(); refreshDl(); }, end: () => renderPanel() }) : null),
+    sec(2, 'Mouvement',
+      quick([[0, 'À vide']].concat(r.orient === 'h' ? [[0.1, 'Étiré 10 cm'], [-0.08, 'Comprimé 8 cm']] : [[Math.round(eqv * 1000) / 1000, 'À l\'équilibre'], [Math.min(dlRange()[1], Math.round((eqv + 0.08) * 1000) / 1000), 'Équilibre + 8 cm']]), r.dl0, v => { r.dl0 = v; paramChanged(true); }),
+      h('div', { id: 'dlSlot' }, dlSlider(false))),
+    sec(3, 'Support',
+      h('div', { class: 'seg full', style: 'margin-bottom:8px' }, Object.entries(ORI).map(([k, o]) => h('button', { class: k === r.orient ? 'on' : '', onclick: () => {
+        markLibre(); r.orient = k; if (HAS3D) buildResScene(); cameraDefaults(); paramChanged(true); } }, o.t.split(' — ')[0]))),
+      h('div', { class: 'hint' }, r.orient === 'h' ? '0° — horizontal : masse sur une table, accrochée à un mur.' : r.orient === 'i' ? '45° — incliné : masse sur un plan incliné.' : '90° — vertical : masse suspendue à un support.')),
+    sec(4, 'Frottements', fricRow('Amortissement', Object.entries(DAMP).map(([id, o]) => ({ id, t: o.t })), r.damp, id => { r.damp = id; paramChanged(true); })),
     departCard(), displayCard()];
 }
 function dlSlider(lock) {
   const r = S.res, [a, b] = dlRange();
-  return sliderRow({ label: r.orient === 'h' ? 'Étirement initial Δl₀ (− : compression)' : 'Allongement au lâcher Δl₀', ped: lock, min: +(a * 100).toFixed(1), max: +(b * 100).toFixed(1), step: 0.5, value: +(r.dl0 * 100).toFixed(1), dig: 1, unit: 'cm',
+  return sliderRow({ label: r.orient === 'h' ? 'Étirement au départ Δl₀ (− : compression)' : 'Allongement au départ Δl₀', min: +(a * 100).toFixed(1), max: +(b * 100).toFixed(1), step: 0.5, value: +(r.dl0 * 100).toFixed(1), dig: 1, unit: 'cm',
     hint: r.orient === 'h' ? 'au-delà de 15 cm, les spires se toucheraient' : `équilibre : Δl = ${fmt(dlEq() * 100, 1)} cm`, on: v => { r.dl0 = v / 100; paramChanged(); } });
 }
-function refreshDl() { const s = $('#dlSlot'); if (s) { s.innerHTML = ''; s.append(dlSlider(S.res.sit === 'standard')); } }
+function refreshDl() { const s = $('#dlSlot'); if (s) { s.innerHTML = ''; s.append(dlSlider(false)); } }
 function projPanel() {
-  const q = S.proj, lock = q.sit === 'standard', sit = SIT_PROJ.find(x => x.id === q.sitId), pedM = lock && sit && sit.ped === 'm';
-  return [sitCard('proj', q, SIT_PROJ, id => applySit('proj', id)),
-    sec(1, 'Objet', `balle · ${fmt(q.m, 2)} kg`,
-      sliderRow({ label: 'Masse de la balle m', dis: lock && !pedM, ped: pedM, min: 0.05, max: 5, step: 0.05, value: q.m, dig: 2, unit: 'kg', hint: 'sans air, elle ne change pas la trajectoire !', on: v => { q.m = v; paramChanged(); }, end: () => renderPanel() })),
-    sec(2, 'Support', q.h0 > 0 ? `départ à ${fmt(q.h0, 1)} m` : 'départ au sol',
-      sliderRow({ label: 'Hauteur de départ h₀', dis: lock, min: q.type === 'chute' ? 1 : 0, max: 50, step: 0.5, value: Math.max(q.h0, q.type === 'chute' ? 1 : 0), dig: 1, unit: 'm', hint: 'une tour de cette hauteur est dessinée', on: v => { q.h0 = v; paramChanged(); }, end: () => renderPanel() })),
-    sec(3, 'Mouvement', PTYPE[q.type] + (q.type !== 'chute' ? ` · ${fmt(q.v0, 1)} m/s` : '') + (q.type === 'oblique' ? ` · ${q.theta}°` : ''),
-      selectRow({ label: 'Type de lancer', dis: lock, value: q.type, options: Object.entries(PTYPE), on: v => { q.type = v; if (v === 'oblique' && q.theta === 90) q.theta = 45; if (v !== 'chute' && q.v0 < 1) q.v0 = 10; if (v === 'chute' && q.h0 < 1) q.h0 = 10; if (v === 'chute') goStep(4); paramChanged(true); } }),
-      q.type !== 'chute' ? sliderRow({ label: 'Vitesse de lancement v₀', dis: lock && q.type !== 'vertical', ped: lock && q.type === 'vertical', min: 1, max: 30, step: 0.5, value: q.v0, dig: 1, unit: 'm/s', on: v => { q.v0 = v; paramChanged(); }, end: () => renderPanel() }) : null,
-      q.type === 'oblique' ? sliderRow({ label: 'Angle de tir θ', ped: lock, min: 0, max: 90, step: 1, value: q.theta, dig: 0, unit: '°', hint: '0° = tir horizontal', on: v => { q.theta = v; paramChanged(); }, end: () => renderPanel() }) : null),
-    sec(4, 'Frottements', 'air ' + fricName(AIR[q.air].t),
-      selectRow({ label: 'Frottements de l\'air', dis: lock, value: q.air, options: Object.entries(AIR).map(([k, o]) => [k, o.t]), on: v => { q.air = v; goStep(0); paramChanged(true); }, hint: 'Avec frottement, la trajectoire idéale reste en pointillés pour comparer.' })),
+  const q = S.proj;
+  return [
+    sec(1, 'Objet', h('div', { class: 'fixedObj' }, '● Balle'),
+      sliderRow({ label: 'Masse de la balle m', min: 0.05, max: 5, step: 0.05, value: q.m, dig: 2, unit: 'kg', hint: 'sans air, elle ne change pas la trajectoire !', on: v => { q.m = v; paramChanged(); }, end: () => renderPanel() })),
+    sec(2, 'Mouvement',
+      radio(Object.entries(PTYPE), q.type, v => { q.type = v; if (v === 'oblique' && q.theta === 90) q.theta = 45; if (v !== 'chute' && q.v0 < 1) q.v0 = 10; if (v === 'chute' && q.h0 < 1) q.h0 = 10; paramChanged(true); }),
+      q.type !== 'chute' ? sliderRow({ label: 'Vitesse de lancement v₀', min: 1, max: 30, step: 0.5, value: q.v0, dig: 1, unit: 'm/s', on: v => { q.v0 = v; paramChanged(); }, end: () => renderPanel() }) : null,
+      q.type === 'oblique' ? [quick([[0, '0°'], [30, '30°'], [45, '45°'], [60, '60°']], q.theta, v => { q.theta = v; paramChanged(true); }),
+        sliderRow({ label: 'Angle de tir θ', min: 0, max: 90, step: 1, value: q.theta, dig: 0, unit: '°', hint: '0° = tir horizontal', on: v => { q.theta = v; paramChanged(); }, end: () => renderPanel() })] : null),
+    sec(3, 'Support',
+      quick((q.type === 'chute' ? [] : [[0, 'Au sol']]).concat([[10, '10 m'], [30, '30 m']]), q.h0, v => { q.h0 = v; paramChanged(true); }),
+      sliderRow({ label: 'Hauteur de départ h₀', min: q.type === 'chute' ? 1 : 0, max: 50, step: 0.5, value: Math.max(q.h0, q.type === 'chute' ? 1 : 0), dig: 1, unit: 'm', hint: 'une tour de cette hauteur est dessinée', on: v => { q.h0 = v; paramChanged(); }, end: () => renderPanel() })),
+    sec(4, 'Frottements', fricRow('Frottements de l\'air', Object.entries(AIR).map(([id, o]) => ({ id, t: o.t })), q.air, id => { q.air = id; paramChanged(true); }),
+      airC() > 0 ? h('div', { class: 'hint' }, 'La trajectoire idéale (sans air) reste en pointillés pour comparer.') : null),
     departCard(), displayCard()];
 }
 function applySit(tab, id) {
@@ -1683,7 +1735,7 @@ function setMode(m) {
   S.mode = m; document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
   if (m === 'eleve') {
     const p = S.plan; if (p.sit === 'standard' && SIT_PLAN.find(x => x.id === p.sitId).adv) applySit('plan', 'p1');
-    if (p.sit === 'libre' && p.surf === 'perso') p.surf = 'fort';
+    if (p.surf === 'perso') p.surf = 'moyen';
   }
   if (simTab()) paramChanged(true);
   renderDefis();
@@ -1750,7 +1802,7 @@ function updateTriScore() { $('#triScore').textContent = `Trouvées : ${triState
    ===================================================================== */
 const DEFIS = [
   { q: 'Un cube est posé sans vitesse sur une pente en bois de 15° (μ = 0,30). Que fait-il ?', o: ['Il glisse vers le bas', 'Il reste immobile', 'Il roule'], ok: 1,
-    x: 'tan 15° ≈ 0,27 ≤ 0,30 : le frottement d\'adhérence suffit. Les forces se compensent, le cube reste immobile.', pre: { tab: 'plan', p: { obj: 'cube', m: 2, alpha: 15, surf: 'fort', mvt: 'lacher' } } },
+    x: 'tan 15° ≈ 0,27 ≤ 0,30 : le frottement d\'adhérence suffit. Les forces se compensent, le cube reste immobile.', pre: { tab: 'plan', p: { obj: 'cube', m: 2, alpha: 15, surf: 'moyen', mvt: 'lacher' } } },
   { q: 'Sans frottement, sur une pente de 30°, on remplace un cube de 2 kg par un cube de 4 kg. Son accélération…', o: ['double', 'reste la même', 'est divisée par deux'], ok: 1,
     x: 'Sans frottement, a = g·sin α : la masse n\'intervient pas.', pre: { tab: 'plan', p: { obj: 'cube', m: 4, alpha: 30, surf: 'aucun', mvt: 'lacher' } } },
   { q: 'Une main pousse un cube sur une table SANS frottement pendant 1 s, puis le lâche. Ensuite, le cube…', o: ['s\'arrête aussitôt', 'ralentit puis s\'arrête', 'continue à vitesse constante'], ok: 2,
@@ -1758,7 +1810,7 @@ const DEFIS = [
   { q: 'Un véhicule roule à 5 m/s sur une route horizontale SANS aucune résistance. Quelle force motrice faut-il pour garder cette vitesse ?', o: ['Une force égale à son poids', 'Une petite force constante', 'Aucune force : F = 0'], ok: 2,
     x: 'Si rien ne freine, le mouvement uniforme se poursuit seul.', pre: { tab: 'plan', p: { obj: 'vehicule', m: 1000, alpha: 0, surf: 'aucun', mvt: 'vcte', sens: 1, vc: 5 } } },
   { q: 'Sur la Lune (g = 1,6 N/kg), que devient un cube de 2 kg ?', o: ['Sa masse vaut 0,32 kg', 'Sa masse reste 2 kg, son poids vaut 3,2 N', 'Rien ne change'], ok: 1,
-    x: 'La masse ne dépend pas du lieu. P = m·g = 2 × 1,6 = 3,2 N.', pre: { tab: 'plan', g: 1.6, p: { obj: 'cube', m: 2, alpha: 0, surf: 'fort', mvt: 'lacher' } } },
+    x: 'La masse ne dépend pas du lieu. P = m·g = 2 × 1,6 = 3,2 N.', pre: { tab: 'plan', g: 1.6, p: { obj: 'cube', m: 2, alpha: 0, surf: 'moyen', mvt: 'lacher' } } },
   { q: 'Une masse de 0,5 kg est suspendue à un ressort de raideur 50 N/m (g = 10 N/kg). Allongement à l\'équilibre ?', o: ['1 cm', '10 cm', '50 cm'], ok: 1,
     x: 'k·Δl = m·g ⇒ Δl = 0,5 × 10 / 50 = 0,10 m = 10 cm.', pre: { tab: 'ressort', g: 10, p: { orient: 'v', kp: 'moyen', k: 50, m: 0.5, dl0: 'eq', damp: 'aucun' } } },
   { q: 'Une balle est lâchée et une autre est lancée horizontalement, de la même hauteur et au même instant. Laquelle touche le sol en premier ?', o: ['La balle lâchée', 'La balle lancée', 'Les deux en même temps'], ok: 2,
@@ -1835,7 +1887,15 @@ function toggleProj(on, fromFs) {
   try { if (v && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); else if (!v && !fromFs && document.fullscreenElement) document.exitFullscreen(); } catch (e) { }
   $('#fsBtn').title = v ? 'Quitter le plein écran (Échap)' : 'Scène en plein écran (Échap pour revenir)'; setTimeout(() => { resize(); if (S.tab === 'proj') fitProj(); }, 120);
 }
+/* Mémorise les derniers réglages dans ce navigateur (rien n'est envoyé ailleurs). */
+const STORE = 'atelierForces.v1';
+function saveState() { try { localStorage.setItem(STORE, JSON.stringify({ mode: S.mode, g: S.g, tab: S.tab, plan: S.plan, res: S.res, proj: S.proj, show: S.show, autoPause: S.autoPause, z: S.z })); } catch (e) { } }
+function loadState() { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } }
+/* Rendu à la demande : on ne redessine la scène que si quelque chose bouge (plus léger pour les petits ordinateurs). */
+let lastKick = performance.now();
+function kick() { lastKick = performance.now(); }
 function bindUI() {
+  ['pointermove', 'pointerdown', 'wheel', 'keydown', 'input', 'click'].forEach(ev => document.addEventListener(ev, kick, { passive: true }));
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
   $('#infoT').onclick = () => $('#info').classList.toggle('mini');
   document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
@@ -1859,8 +1919,8 @@ function bindUI() {
   $('#btnStep').onclick = () => stepOnce(1); $('#btnBack').onclick = () => stepOnce(-1);
   $('#tl').addEventListener('input', e => scrubTo(+e.target.value));
   $('#triReset').onclick = () => renderTri(true);
-  const setZ = z => { S.z = clamp(Math.round(z * 100) / 100, 0.8, 1.6); document.documentElement.style.setProperty('--z', S.z); setTimeout(resize, 50); };
-  $('#btnZp').onclick = () => setZ(S.z + 0.1); $('#btnZm').onclick = () => setZ(S.z - 0.1);
+  const setZ = window.setZ = z => { S.z = clamp(Math.round(z * 100) / 100, 0.8, 1.6); document.documentElement.style.setProperty('--z', S.z); setTimeout(resize, 50); };
+  $('#btnZp').onclick = () => { setZ(S.z + 0.1); saveState(); }; $('#btnZm').onclick = () => { setZ(S.z - 0.1); saveState(); };
   $('#btnPanel').onclick = () => { S.panel = !S.panel; $('#simView').classList.toggle('collapsed', !S.panel); setTimeout(resize, 50); };
   $('#fsBtn').onclick = () => toggleProj();
   document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('projecting')) toggleProj(false, true); });
@@ -1878,7 +1938,17 @@ function start() {
   if (HAS3D) { try { init3D(); } catch (err) { console.error(err); } }
   else $('#stage').append(h('div', { id: 'noThree', html: '<div><b>La 3D n\'a pas pu être chargée.</b><br>Three.js se télécharge depuis Internet : vérifiez la connexion puis rechargez la page.<br>Les équations, le bilan, l\'atelier de tri et les défis restent utilisables.</div>' }));
   if (HAS3D && resG) { buildResScene(); resG.visible = false; }
-  applySit('plan', 'p2');
+  const d = loadState();
+  if (d && d.plan && d.res && d.proj) {   // on reprend là où le professeur s'était arrêté
+    Object.assign(S.plan, d.plan, { s0: null }); Object.assign(S.res, d.res); Object.assign(S.proj, d.proj); Object.assign(S.show, d.show || {});
+    if (!surfList().some(x => x.id === S.plan.surf)) S.plan.surf = 'aucun';
+    if (!DAMP[S.res.damp]) S.res.damp = 'aucun'; if (!AIR[S.proj.air]) S.proj.air = 'aucun'; if (!ORI[S.res.orient]) S.res.orient = 'h';
+    S.autoPause = d.autoPause !== false; S.g = [10, 9.8, 1.6].includes(d.g) ? d.g : 10; $('#gSel').value = String(S.g);
+    if (d.z) window.setZ(d.z);
+    if (HAS3D) { buildWedge(); buildResScene(); }
+    if (d.mode === 'avance') { S.mode = 'avance'; document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === 'avance')); }
+    switchTab(['plan', 'ressort', 'proj', 'tri', 'defis'].includes(d.tab) ? d.tab : 'plan');
+  } else applySit('plan', 'p2');
   setView('profil');
   renderTri(); renderDefis();
   requestAnimationFrame(loop);
