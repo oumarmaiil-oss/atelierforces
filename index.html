@@ -4260,6 +4260,7 @@ svg.ic{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;strok
 .brand small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
 .hctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 #btnMenu{display:none}
+@media (max-width:1320px) and (min-width:1001px){ #btnSignal span{display:none} }
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#ff5a5f,#22d3ee);display:grid;place-items:center}
 .gbox{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .gbox select{background:var(--panel2);border:1px solid var(--line);color:#fff;border-radius:9px;padding:8px 10px;min-height:40px}
@@ -4585,6 +4586,7 @@ details.sec .body{padding:2px 14px 14px}
   </label>
   <button class="hbtn" id="btnZm" title="Réduire les textes">A−</button>
   <button class="hbtn" id="btnZp" title="Agrandir les textes">A+</button>
+  <button class="hbtn" id="btnSignal" title="Signaler une erreur par WhatsApp (le message contient la situation affichée)"><svg class="ic" viewBox="0 0 24 24"><path d="M4 21V4h11l1 2h4v9h-7l-1-2H6"/></svg><span>Signaler une erreur</span></button>
   <button class="hbtn" id="btnPanel" title="Masquer / afficher le panneau de réglages"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
   </div>
 </header>
@@ -6234,6 +6236,15 @@ function applyNarrow() {   // au démarrage et à chaque changement d'orientatio
   $('#top').classList.remove('menuOpen'); $('#btnMenu').setAttribute('aria-expanded', 'false');
   setTimeout(() => { resize(); if (S.tab === 'proj') fitProj(); kick(); }, 60);
 }
+/* « Signaler une erreur » : ouvre WhatsApp avec un message prérempli décrivant la situation affichée. */
+const WHATSAPP = '221774144799';
+function signaler() {
+  const tabN = { plan: 'Plan incliné', ressort: 'Ressort', proj: 'Projectiles', tri: 'Tri', defis: 'Défis' }[S.tab];
+  let ctx = tabN;
+  if (simTab()) { const st = curSt(), ex = curSits().find(x => x.id === st.sitId); ctx += st.sit === 'standard' && ex ? ` — exemple « ${ex.t} »` : ' — réglages libres : ' + departTxt(); ctx += ` — t = ${fmt(simT(), 2)} s`; }
+  const msg = `Atelier des Forces — signalement\nOnglet : ${ctx}\nMode : ${isAdv() ? 'Avancé' : 'Élève'} · g = ${gS()} N/kg · écran ${innerWidth}×${innerHeight}\n\nProblème constaté : `;
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+}
 /* Mémorise les derniers réglages dans ce navigateur (rien n'est envoyé ailleurs). */
 const STORE = 'atelierForces.v1';
 function saveState() { try { localStorage.setItem(STORE, JSON.stringify({ mode: S.mode, g: S.g, tab: S.tab, plan: S.plan, res: S.res, proj: S.proj, show: S.show, autoPause: S.autoPause, z: S.z })); } catch (e) { } }
@@ -6276,6 +6287,7 @@ function bindUI() {
   $('#btnZp').onclick = () => { setZ(S.z + 0.1); saveState(); }; $('#btnZm').onclick = () => { setZ(S.z - 0.1); saveState(); };
   $('#btnPanel').onclick = () => { S.panel = !S.panel; $('#simView').classList.toggle('collapsed', !S.panel); setTimeout(resize, 50); };
   $('#fsBtn').onclick = () => toggleProj();
+  $('#btnSignal').onclick = () => signaler();
   document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('projecting')) toggleProj(false, true); });
   document.addEventListener('keydown', e => {
     if (!simTab() || /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
