@@ -27,7 +27,7 @@ for (const [nom, [w, h]] of Object.entries(ECRANS)) {
   console.log(`${nom} (${w}×${h}) : hauteur de scène ${m.vh} px`);
   if (m.sw > w + 1) ko(`débordement horizontal (${m.sw} px)`);
   if (m.vh < 150) ko('scène trop basse');
-  const n = await p.evaluate(() => { let n = 0; S.mode = 'avance';
+  const n = await p.evaluate(() => { let n = 0; setLevel(3);
     for (const [tab, L] of [['plan', SIT_PLAN], ['ressort', SIT_RES], ['proj', SIT_PROJ]]) { switchTab(tab);
       for (const s of L) { applySit(tab, s.id); for (let i = 0; i < 3000; i++) stepSim(DT); updateReadouts(); n++; } }
     switchTab('tri'); switchTab('defis'); switchTab('plan'); return n; });
