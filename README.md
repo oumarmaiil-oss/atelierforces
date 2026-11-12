@@ -42,12 +42,15 @@ Frise du temps avec repères cliquables aux moments clés, pas à pas avant / ar
 
 Un seul fichier : ouvrez `index.html` dans un navigateur. Three.js 0.187 (rendu 3D) est intégré au fichier : l'atelier fonctionne **sans connexion**, et le fichier (~750 Ko) peut se partager par WhatsApp ou clé USB.
 
+**Français | English** : bouton FR | EN dans l'en-tête (ou `?lang=en` dans l'adresse).
+
 Ordinateur, vidéoprojecteur, tablette et téléphone (portrait ou paysage) : sur petit écran, la scène reste visible en haut et le panneau, les équations et le graphique s'ouvrent dans un volet à onglets.
 
 ## Pour les développeurs
 
 - `node outils/integrer-three.mjs` : régénère le sous-ensemble de Three.js intégré à `index.html` (après `npm i --no-save three@0.187.0 esbuild`).
-- `node tests/verifier.mjs` : vérifie l'atelier sur 7 tailles d'écran (erreurs, hors ligne, débordements, 32 exemples) — après `npm i --no-save playwright-core`.
+- `node tests/verifier.mjs` : vérifie l'atelier sur 7 tailles d'écran (erreurs, hors ligne, débordements, 32 exemples) et contrôle qu'aucun texte n'échappe à la traduction anglaise
+- Traduction : le code affiche le français ; en anglais, chaque texte est remplacé à l'affichage grâce au dictionnaire `EN` (script `dico-en` en tête du code, « # » = un nombre) — après `npm i --no-save playwright-core`.
 
 ## Licence
 

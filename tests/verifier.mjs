@@ -36,6 +36,21 @@ for (const [nom, [w, h]] of Object.entries(ECRANS)) {
   if (reqs.length) ko('requêtes réseau : ' + reqs.join(' | '));
   await ctx.close();
 }
+// Version anglaise : tous les textes affichés doivent avoir une traduction.
+{
+  const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const p = await ctx.newPage(); const errs = [];
+  p.on('pageerror', e => errs.push(e.message));
+  await p.goto(url + '?lang=en'); await p.waitForTimeout(800);
+  const miss = await p.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms));
+    for (const lv of [1, 2, 3]) { setLevel(lv);
+      for (const [tab, L] of [['plan', SIT_PLAN], ['ressort', SIT_RES], ['proj', SIT_PROJ]]) { switchTab(tab); setSheet('exemples'); await w(30); setSheet('reglages');
+        for (const s of L) { applySit(tab, s.id); for (const bt of ['eq', 'bilan', 'doi']) { S.bt = bt; updateReadouts(); await w(20); } for (let i = 0; i < 3000; i++) stepSim(DT); updateReadouts(); await w(20); } } }
+    switchTab('tri'); await w(30); switchTab('defis'); await w(30); return [...MISSING]; });
+  console.log(`anglais : ${miss.length} texte(s) sans traduction`);
+  if (miss.length) ko('textes non traduits : ' + miss.slice(0, 8).join(' | '));
+  if (errs.length) ko('erreurs (anglais) : ' + errs.join(' | '));
+  await ctx.close();
+}
 await b.close();
 console.log(echecs ? `\n${echecs} échec(s)` : '\nTout est correct.');
 process.exit(echecs ? 1 : 0);
