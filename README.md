@@ -24,7 +24,7 @@ Laboratoire virtuel interactif de sciences physiques (collège · lycée) pour c
 ## Le panneau de gauche
 
 - **📚 Exemples** : les 32 situations toutes prêtes, rangées par notion du programme, avec une ligne « ce que ça illustre ». Un clic charge l'exemple ; un badge « modifié » apparaît dès qu'on change un réglage (re-cliquer l'exemple ou ↺ pour revenir).
-- **⚙ Réglages** : quatre étapes, toujours dans le même ordre — **1. Objet · 2. Mouvement · 3. Support · 4. Frottements** (aucun, faible, moyen, fort ; μ chiffré au niveau 3), chacune avec une aide d'une ligne. L'encadré « Au départ » résume l'expérience en une phrase.
+- **⚙ Réglages** : quatre étapes, toujours dans le même ordre — **1. Objet · 2. Mouvement · 3. Support · 4. Frottements** (aucun, faible, moyen, fort ; au niveau 3, coefficient d'adhérence μa au départ et coefficient de glissement μg pendant le glissement), chacune avec une aide d'une ligne. L'encadré « Au départ » résume l'expérience en une phrase.
 
 ## Niveaux d'affichage
 
@@ -36,7 +36,7 @@ Chaque force a sa propre couleur de flèche, à l'échelle avec une longueur min
 
 ## Outils
 
-Frise du temps avec repères cliquables aux moments clés, pas à pas avant / arrière, ralenti ×0,2, pauses automatiques, chronophotographie, fiche A → B, cotes, graphiques en direct, plein écran de la scène, taille des textes réglable, raccourcis clavier (Espace, ← →, R, T, S, 1 2 3, D, L, P, F ; liste avec la touche ?), bouton « Signaler une erreur » (WhatsApp, message prérempli). Les derniers réglages sont mémorisés dans le navigateur.
+Frise du temps avec repères cliquables aux moments clés, pas à pas avant / arrière, ralenti ×0,2, pauses automatiques, chronophotographie, fiche A → B, cotes, graphiques en direct, plein écran de la scène, taille des textes réglable, raccourcis clavier (Espace, ← →, R, T, S, 1 2 3, D, L, P, F ; liste avec la touche ?), bouton « Signaler une erreur » (WhatsApp, message prérempli), **image** de la scène (touche C) et **lien de partage** qui rouvre l'expérience avec les mêmes réglages. Dans les équations, les données soulignées (masse, angle, raideur, vitesse initiale…) se modifient d'un clic. Les derniers réglages sont mémorisés dans le navigateur.
 
 ## Utilisation
 

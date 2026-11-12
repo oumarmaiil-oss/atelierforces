@@ -4261,7 +4261,7 @@ svg.ic{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;strok
 .hctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .lvl{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 #btnMenu{display:none}
-@media (max-width:1700px){ #btnSignal span{display:none} .top .brand small{display:none} .top{gap:10px} .hctl{gap:10px;flex-wrap:nowrap} }
+@media (max-width:1700px){ #btnSignal span,#btnShot span,#btnShare span{display:none} .top .brand small{display:none} .top{gap:10px} .hctl{gap:10px;flex-wrap:nowrap} }
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#ff5a5f,#22d3ee);display:grid;place-items:center}
 .gbox{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .gbox select{background:var(--panel2);border:1px solid var(--line);color:#fff;border-radius:9px;padding:8px 10px;min-height:40px}
@@ -4401,6 +4401,8 @@ details.sec .body{padding:2px 14px 14px}
 .brk{display:none}
 #keys{position:fixed;inset:0;z-index:2000;background:rgba(2,4,11,.7);display:grid;place-items:center;padding:16px}
 #keys[hidden]{display:none}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2100;background:#101a33;border:1px solid #3b4a7a;color:#e2e8f0;border-radius:12px;padding:10px 14px;font-weight:700;max-width:min(92vw,560px);box-shadow:0 10px 30px rgba(0,0,0,.5);word-break:break-all}
+#toast[hidden]{display:none}
 #keys .kbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;max-width:460px;width:100%;max-height:100%;overflow:auto}
 #keys h3{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;font-size:17px}
 #keys td{padding:5px 8px;vertical-align:top}#keys td:first-child{white-space:nowrap;text-align:right}
@@ -4425,6 +4427,9 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
 .eq .x{color:var(--muted);font-size:13px}
 .eqgrid{display:grid;grid-template-columns:1fr 1fr;column-gap:22px}
 .nd{color:var(--red)}.nc{color:var(--blue)}
+.ed{cursor:pointer;border-bottom:2px dashed #818cf8;padding:0 2px;border-radius:3px;background:rgba(129,140,248,.12)}
+.ed:hover,.ed:focus{background:rgba(129,140,248,.3);outline:none}
+.edin{width:5.5em;font:inherit;font-size:16px;padding:1px 4px;border:2px solid #818cf8;border-radius:6px;background:#0a1120;color:#fff}
 .btab{width:100%;border-collapse:collapse;font-size:14px}
 .btab th{text-align:left;color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:6px 8px;border-bottom:1px solid var(--line)}
 .btab td{padding:7px 8px;border-bottom:1px solid #18233a;vertical-align:middle}
@@ -4512,6 +4517,9 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
   #btnKeys{display:none}
   .hctl{display:none;position:absolute;right:8px;top:50px;z-index:50;background:#0b1222;border:1px solid var(--line);border-radius:12px;padding:10px;gap:10px;box-shadow:0 12px 30px rgba(0,0,0,.6);max-width:calc(100vw - 16px)}
   .top.menuOpen .hctl{display:flex}
+  .top .hctl{flex-wrap:wrap;width:max-content}
+  .hctl .hbtn span{display:inline!important}
+  .lvl{flex-wrap:wrap}
   .top{position:relative}
   .tabs{padding:4px 8px 0;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
@@ -4613,6 +4621,8 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
   <button class="hbtn" id="btnZm" title="Réduire les textes">A−</button>
   <button class="hbtn" id="btnZp" title="Agrandir les textes">A+</button>
   <button class="hbtn" id="btnKeys" title="Raccourcis clavier (touche ?)" aria-label="Raccourcis clavier"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></button>
+  <button class="hbtn" id="btnShot" title="Enregistrer une image de la scène (touche C)"><svg class="ic" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Image</span></button>
+  <button class="hbtn" id="btnShare" title="Partager un lien qui ouvre cette expérience avec les mêmes réglages"><svg class="ic" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg><span>Lien</span></button>
   <button class="hbtn" id="btnSignal" title="Signaler une erreur par WhatsApp (le message contient la situation affichée)"><svg class="ic" viewBox="0 0 24 24"><path d="M4 21V4h11l1 2h4v9h-7l-1-2H6"/></svg><span>Signaler une erreur</span></button>
   <button class="hbtn" id="btnPanel" title="Masquer / afficher le panneau de réglages"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
   </div>
@@ -4627,6 +4637,7 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
   <button data-tab="defis"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Défis</button>
 </nav>
 
+<div id="toast" role="status" aria-live="polite" hidden></div>
 <div id="keys" hidden role="dialog" aria-label="Raccourcis clavier"><div class="kbox">
   <h3>Raccourcis clavier <button class="kclose hbtn" aria-label="Fermer">✕</button></h3>
   <table>
@@ -4639,6 +4650,7 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
     <tr><td><kbd>D</kbd></td><td>Vue de profil / vue 3D</td></tr>
     <tr><td><kbd>L</kbd></td><td>Réduire / ouvrir la légende</td></tr>
     <tr><td><kbd>P</kbd></td><td>Masquer / afficher le panneau</td></tr>
+    <tr><td><kbd>C</kbd></td><td>Enregistrer une image de la scène</td></tr>
     <tr><td><kbd>F</kbd></td><td>Plein écran (<kbd>Échap</kbd> pour revenir)</td></tr>
     <tr><td><kbd>?</kbd></td><td>Afficher cette liste</td></tr>
   </table></div></div>
@@ -4781,8 +4793,8 @@ const OBJ = {
 };
 const SURF = {   // quatre niveaux de frottement, les mêmes dans tous les onglets
   solide: [
-    { id: 'aucun', t: 'Aucun — surface lisse (idéal)', mu: 0 }, { id: 'faible', t: 'Faible — glace', mu: 0.05 },
-    { id: 'moyen', t: 'Moyen — bois', mu: 0.30 }, { id: 'fort', t: 'Fort — caoutchouc', mu: 0.70 },
+    { id: 'aucun', t: 'Aucun — surface lisse (idéal)', mu: 0, muS: 0 }, { id: 'faible', t: 'Faible — glace', mu: 0.05, muS: 0.10 },
+    { id: 'moyen', t: 'Moyen — bois', mu: 0.30, muS: 0.50 }, { id: 'fort', t: 'Fort — caoutchouc', mu: 0.70, muS: 0.90 },
     { id: 'perso', t: 'Personnalisé — μ chiffré', mu: null, adv: true, max: 1 }
   ],
   vehicule: [
@@ -4819,7 +4831,7 @@ const SIT_PLAN = [
     d: 'Descente à vitesse constante : la route doit maintenant retenir le véhicule. La force de la route s\'oppose au mouvement : c\'est un freinage.' },
   { id: 'p12', t: 'Moteur trop faible : elle recule', p: { obj: 'vehicule', m: 1000, alpha: 15, surf: 'faible', mvt: 'pousse', sens: -1, Fp: 1500, perm: true, dur: 2, v0: 5 },
     d: 'Le véhicule aborde la côte à 5 m/s avec une force motrice de 1 500 N. F < Pₓ + f : il ralentit, s\'arrête, puis recule en marche arrière, toujours tourné vers le haut.' },
-  { id: 'p9', t: 'Glisse à vitesse constante (μ = tan α)', adv: true, p: { obj: 'cube', m: 2, alpha: 20, surf: 'perso', muPerso: +Math.tan(rad(20)).toFixed(3), mvt: 'lancer', sens: 1, v0: 3 },
+  { id: 'p9', t: 'Glisse à vitesse constante (μ = tan α)', adv: true, p: { obj: 'cube', m: 2, alpha: 20, surf: 'perso', muPerso: +Math.tan(rad(20)).toFixed(3), muPersoS: 0.5, mvt: 'lancer', sens: 1, v0: 3 },
     d: 'Ici μ = tan α : Pₓ est exactement compensée par le frottement. Une fois lancé, le cube glisse à vitesse constante.' }
 ];
 const SIT_RES = [
@@ -4886,7 +4898,7 @@ const S = {
   level: 2, solo: null, g: 10, tab: 'plan', view: 'profil', running: false, slow: false, autoPause: true,
   bt: 'eq', hl: null, z: 1, panel: true, ptab: 'reglages', sh: 'reglages',
   show: { forces: true, valeurs: true, chrono: true, cotes: true, comp: true, axes: true, fiche: true }, open: {},
-  plan: { sit: 'standard', sitId: 'p2', obj: 'cube', m: 2, alpha: 30, surf: 'aucun', muPerso: 0.3, mvt: 'lacher', sens: 1, v0: 3, vc: 3, Fp: 20, dur: 1, perm: false, s0: null },
+  plan: { sit: 'standard', sitId: 'p2', obj: 'cube', m: 2, alpha: 30, surf: 'aucun', muPerso: 0.3, muPersoS: 0.5, mvt: 'lacher', sens: 1, v0: 3, vc: 3, Fp: 20, dur: 1, perm: false, s0: null },
   res: { sit: 'standard', sitId: 'r2', orient: 'h', kp: 'moyen', k: 50, m: 0.5, dl0: 0.10, damp: 'aucun' },
   proj: { sit: 'standard', sitId: 'q3', type: 'oblique', m: 0.5, h0: 0, v0: 15, theta: 45, air: 'aucun' }
 };
@@ -4899,7 +4911,15 @@ const QS = { t: 0, landed: false, apex: false };
 let warnMsg = '', evtMsg = '';
 
 function surfList() { return SURF[S.plan.obj === 'vehicule' ? 'vehicule' : 'solide']; }
+/** Coefficients de frottement : μ glissement (objet qui glisse) et μ adhérence (objet immobile ou qui roule sans glisser, μa ≥ μg).
+    Pour la voiture (résistance au roulement), un seul coefficient. */
 function getMu() { const s = surfList().find(x => x.id === S.plan.surf) || surfList()[0]; return s.mu === null ? S.plan.muPerso : s.mu; }
+function getMuS() {
+  const s = surfList().find(x => x.id === S.plan.surf) || surfList()[0];
+  if (S.plan.obj === 'vehicule') return getMu();
+  if (s.mu === null) return Math.max(S.plan.muPerso, S.plan.muPersoS ?? S.plan.muPerso);
+  return s.muS ?? s.mu;
+}
 function dampH() { const r = S.res; return 2 * DAMP[r.damp].z * Math.sqrt(r.k * r.m); }
 function sinB() { return Math.sin(rad(ORI[S.res.orient].b)); }
 function dlEq() { return S.res.m * S.g * sinB() / S.res.k; }
@@ -5372,7 +5392,7 @@ function updateCamera() {
    ===================================================================== */
 function pushActive() { const p = S.plan; return p.mvt === 'pousse' && (p.perm || PS.t < p.dur - 1e-9); }
 function planDyn() {
-  const p = S.plan, g = S.g, m = p.m, al = rad(p.alpha), sn = Math.sin(al), cs = Math.cos(al), mu = getMu();
+  const p = S.plan, g = S.g, m = p.m, al = rad(p.alpha), sn = Math.sin(al), cs = Math.cos(al), mu = getMu(), muS = getMuS();
   const P = m * g, Px = P * sn, Py = P * cs, Rn = Py, v = PS.v;
   let a = 0, fu = 0, Fu = 0, dw = 0, regime = '';
   const Fcmd = pushActive() ? p.sens * p.Fp : 0;
@@ -5381,16 +5401,16 @@ function planDyn() {
   } else if (p.obj === 'sphere') {
     const D = Px + Fcmd; Fu = Fcmd;
     if (mu === 0) { a = D / m; regime = (Math.abs(D) < 1e-12 && Math.abs(v) < 1e-9) ? 'repos' : 'glisse'; }
-    else if ((2 / 7) * Math.abs(D) <= mu * Rn + 1e-12) { a = D / (1.4 * m); fu = -(2 / 7) * D; regime = (Math.abs(D) < 1e-12 && Math.abs(v) < 1e-9) ? 'repos' : 'roule'; }
+    else if ((2 / 7) * Math.abs(D) <= muS * Rn + 1e-12) { a = D / (1.4 * m); fu = -(2 / 7) * D; regime = (Math.abs(D) < 1e-12 && Math.abs(v) < 1e-9) ? 'repos' : 'roule'; }
     else { const vrel = v - PS.w * R_SPH, dir = sgn(vrel) || sgn(D); fu = -dir * mu * Rn; a = (D + fu) / m; dw = -fu / (0.4 * m * R_SPH); regime = 'roule-glisse'; }
   } else {
     const drive = Px + Fcmd; Fu = Fcmd;
     if (Math.abs(v) < 1e-9) {
-      if (Math.abs(drive) <= mu * Rn + 1e-9) { fu = -drive; a = 0; regime = 'repos'; }
+      if (Math.abs(drive) <= muS * Rn + 1e-9) { fu = -drive; a = 0; regime = 'repos'; }
       else { fu = -sgn(drive) * mu * Rn; a = (drive + fu) / m; regime = 'glisse'; }
     } else { fu = -sgn(v) * mu * Rn; a = (drive + fu) / m; regime = 'glisse'; }
   }
-  return { P, Px, Py, Rn, fu, Fu, a, dw, mu, regime, al, sn, cs, push: pushActive() };
+  return { P, Px, Py, Rn, fu, Fu, a, dw, mu, muS, regime, al, sn, cs, push: pushActive() };
 }
 function margin() { return S.plan.obj === 'vehicule' ? 1.8 : 0.6; }
 function planInit() {
@@ -5827,7 +5847,7 @@ function doiHTML() {
 function planEquations(d) {
   const p = S.plan, m = p.m, o = AUT[p.obj], mS = fmt(m, OBJ[p.obj].mDig), veh = p.obj === 'vehicule';
   const R = [];
-  R.push(eq('P', `${nm('P', V('P') + ' Poids')} : P = m × g = ${mS} × ${gS()} = <b>${fN(d.P)} N</b>`, `Action <b class="nd">à distance</b> de la Terre sur ${o}. Verticale, vers le bas, appliquée au centre de gravité.`));
+  R.push(eq('P', `${nm('P', V('P') + ' Poids')} : P = m × g = ${ed('plan.m', m, OBJ[p.obj].mDig)} × ${gS()} = <b>${fN(d.P)} N</b>`, `Action <b class="nd">à distance</b> de la Terre sur ${o}. Verticale, vers le bas, appliquée au centre de gravité.`));
   if (!isAdv()) R.push(eq('R', `${nm('R', V('R') + ' Réaction du support')} : R = <b>${fN(Math.hypot(d.Rn, d.fu))} N</b>`, `Action <b class="nc">de contact</b> du plan. ` + (Math.abs(d.fu) > 1e-9 ? 'Inclinée à cause des frottements.' : 'Sans frottement, perpendiculaire au plan.')));
   if (p.mvt === 'pousse' || p.mvt === 'vcte') {
     const frein = veh && p.mvt === 'vcte' && d.Fu * p.sens < 0;
@@ -5839,19 +5859,20 @@ function planEquations(d) {
   }
   if (isAdv()) {
     const a = p.alpha;
-    R.push(eq('Px', `P<sub>x</sub> = P·sin α = ${fN(d.P)} × sin ${a}° = <b>${fN(d.Px)} N</b>`, 'Composante du poids parallèle à la pente.'));
+    R.push(eq('Px', `P<sub>x</sub> = P·sin α = ${fN(d.P)} × sin ${ed('plan.alpha', a, 0)}° = <b>${fN(d.Px)} N</b>`, 'Composante du poids parallèle à la pente.'));
     R.push(eq('Py', `P<sub>y</sub> = P·cos α = ${fN(d.P)} × cos ${a}° = <b>${fN(d.Py)} N</b>`, 'Composante du poids perpendiculaire à la pente.'));
     R.push(eq('Rn', `${nm('Rn', V('R', 'N'))} : R<sub>N</sub> = P<sub>y</sub> = <b>${fN(d.Rn)} N</b>`, 'Pas de mouvement perpendiculaire au plan.'));
     let fx;
     if (d.mu === 0) fx = eq('f', `${nm('f', V('f'))} : f = 0 N`, 'Pas de frottement (cas idéal).');
-    else if (d.regime === 'repos') fx = eq('f', `${nm('f', V('f'))} : f = <b>${fN(Math.abs(d.fu))} N</b> ≤ μ·R<sub>N</sub> = ${fN(d.mu * d.Rn)} N`, 'Frottement d\'adhérence : il compense tant qu\'il ne dépasse pas μ·R<sub>N</sub>.');
+    else if (d.regime === 'repos') fx = eq('f', `${nm('f', V('f'))} : f = <b>${fN(Math.abs(d.fu))} N</b> ≤ μ<sub>a</sub>·R<sub>N</sub> = ${fmt(d.muS, 2)} × ${fN(d.Rn)} = ${fN(d.muS * d.Rn)} N`, 'Frottement d\'adhérence : il compense tant qu\'il ne dépasse pas μ<sub>a</sub>·R<sub>N</sub> (μ<sub>a</sub> : coefficient d\'adhérence).');
     else if (d.regime === 'roule') fx = eq('f', `${nm('f', V('f'))} : f = (2/7)·(P<sub>x</sub> + F) = <b>${fN(Math.abs(d.fu))} N</b>`, 'Adhérence au point de contact : c\'est elle qui fait tourner la bille.');
-    else fx = eq('f', `${nm('f', V('f'))} : f = μ·R<sub>N</sub> = ${fmt(d.mu, 2)} × ${fN(d.Rn)} = <b>${fN(Math.abs(d.fu))} N</b>`, 'Opposé au sens du mouvement.');
+    else if (veh) fx = eq('f', `${nm('f', V('f'))} : f = μ·R<sub>N</sub> = ${fmt(d.mu, 2)} × ${fN(d.Rn)} = <b>${fN(Math.abs(d.fu))} N</b>`, 'Résistance au roulement, opposée au sens du mouvement.');
+    else fx = eq('f', `${nm('f', V('f'))} : f = μ<sub>g</sub>·R<sub>N</sub> = ${fmt(d.mu, 2)} × ${fN(d.Rn)} = <b>${fN(Math.abs(d.fu))} N</b>`, 'Frottement de glissement, opposé au sens du mouvement (μ<sub>g</sub> : coefficient de glissement, plus petit que μ<sub>a</sub>).');
     R.push(fx);
     if (p.obj === 'sphere' && d.regime === 'roule') R.push(eq(null, `a = (P<sub>x</sub> + F) / (1,4·m) = <b>${fmt(d.a, 2)} m/s²</b>`, 'Roulement sans glissement (sans poussée : a = 5/7·g·sin α).'));
     else if (d.regime === 'vcte') R.push(eq(null, `Σ${V('F')} = ${V('0')} ⇒ a = 0 ⇒ v = <b>${fmt(Math.abs(PS.v), 1)} m/s</b>`, 'Principe d\'inertie.'));
     else R.push(eq(null, `m·a = P<sub>x</sub> ${d.Fu ? '+ F ' : ''}+ f (projections) ⇒ a = <b>${fmt(d.a, 2)} m/s²</b>`, 'Deuxième loi de Newton sur l\'axe de la pente (orienté vers le bas).'));
-    if (p.obj !== 'sphere' && p.mvt === 'lacher' && p.alpha > 0 && d.mu > 0) { const ta = Math.tan(d.al), ok = ta <= d.mu + 1e-9; R.push(eq(null, `tan α = ${fmt(ta, 3)} ${ok ? '≤' : '>'} μ = ${fmt(d.mu, 3)}`, ok ? 'Condition d\'immobilité vérifiée.' : 'Condition d\'immobilité non vérifiée : l\'objet glisse.')); }
+    if (p.obj !== 'sphere' && p.mvt === 'lacher' && p.alpha > 0 && d.mu > 0) { const ta = Math.tan(d.al), ok = ta <= d.muS + 1e-9; R.push(eq(null, `tan α = ${fmt(ta, 3)} ${ok ? '≤' : '>'} μ<sub>a</sub> = ${fmt(d.muS, 3)}`, ok ? 'Condition d\'immobilité vérifiée.' : 'Condition d\'immobilité non vérifiée : l\'objet glisse.')); }
     if (veh && p.mvt === 'pousse' && p.alpha > 0) { const need = d.Px + d.mu * d.Rn; R.push(eq(null, `F ${p.Fp >= need ? '≥' : '<'} P<sub>x</sub> + μR<sub>N</sub> = ${fN(need)} N`, p.Fp >= need ? 'La force motrice suffit pour monter.' : 'Force motrice insuffisante : le véhicule finit par reculer.')); }
   } else {
     let bil;
@@ -5866,8 +5887,8 @@ function planEquations(d) {
 }
 function resEquations(f) {
   const r = S.res, hor = r.orient === 'h', dl = RS.x, R = [];
-  R.push(eq('P', `${nm('P', V('P') + ' Poids')} : P = m × g = ${fmt(r.m, 2)} × ${gS()} = <b>${fN(f.P)} N</b>`, 'Action <b class="nd">à distance</b> de la Terre sur la masse.'));
-  R.push(eq('T', `${nm('T', V('T') + ' Tension')} : T = k × |Δl| = ${fmt(r.k, 0)} × ${fmt(Math.abs(dl), 3)} = <b>${fN(Math.abs(r.k * dl))} N</b>`, 'Action <b class="nc">de contact</b> du ressort. ' + (Math.abs(dl) < 5e-4 ? 'Ressort à vide : T = 0.' : dl > 0 ? 'Étiré : il tire la masse.' : 'Comprimé : il pousse la masse.')));
+  R.push(eq('P', `${nm('P', V('P') + ' Poids')} : P = m × g = ${ed('res.m', r.m, 2)} × ${gS()} = <b>${fN(f.P)} N</b>`, 'Action <b class="nd">à distance</b> de la Terre sur la masse.'));
+  R.push(eq('T', `${nm('T', V('T') + ' Tension')} : T = k × |Δl| = ${ed('res.k', r.k, 0)} × ${fmt(Math.abs(dl), 3)} = <b>${fN(Math.abs(r.k * dl))} N</b>`, 'Action <b class="nc">de contact</b> du ressort. ' + (Math.abs(dl) < 5e-4 ? 'Ressort à vide : T = 0.' : dl > 0 ? 'Étiré : il tire la masse.' : 'Comprimé : il pousse la masse.')));
   if (hor) R.push(eq('Rn', `${nm('Rn', V('R', 'N') + ' Réaction de la table')} : R<sub>N</sub> = P = <b>${fN(f.Rn)} N</b>`, 'Action <b class="nc">de contact</b> de la table.'));
   if (r.orient === 'i') R.push(eq('Rn', `${nm('Rn', V('R', 'N') + ' Réaction du plan')} : R<sub>N</sub> = P·cos 45° = <b>${fN(f.Rn)} N</b>`, 'Action <b class="nc">de contact</b> du plan incliné (sans frottement).'));
   if (r.damp !== 'aucun') R.push(eq('fd', `${nm('fd', V('f') + ' Frottement')} : f = <b>${fN(Math.abs(f.fd))} N</b>`, 'Action <b class="nc">de contact</b> de l\'air : opposée à la vitesse.'));
@@ -5887,14 +5908,14 @@ function resEquations(f) {
 function projEquations() {
   const q = S.proj, s = projAt(QS.t), F = projFlight(), v0 = projV0vec(), R = [];
   const c = airC(), sp = Math.hypot(s.vx, s.vy);
-  R.push(eq('P', `${nm('P', V('P') + ' Poids')} : P = m × g = ${fmt(q.m, 2)} × ${gS()} = <b>${fN(q.m * S.g)} N</b>`, (c ? 'Action ' : 'Seule force une fois la balle lancée : action ') + '<b class="nd">à distance</b> de la Terre. Elle reste verticale.'));
+  R.push(eq('P', `${nm('P', V('P') + ' Poids')} : P = m × g = ${ed('proj.m', q.m, 2)} × ${gS()} = <b>${fN(q.m * S.g)} N</b>`, (c ? 'Action ' : 'Seule force une fois la balle lancée : action ') + '<b class="nd">à distance</b> de la Terre. Elle reste verticale.'));
   if (c) R.push(eq('fd', `${nm('fd', V('f') + ' Frottement de l\'air')} : f = m·c·v = <b>${fN(q.m * c * sp)} N</b>`, 'Action <b class="nc">de contact</b> de l\'air, opposée à la vitesse : elle raccourcit la trajectoire. En pointillés : la trajectoire idéale sans air.'));
   R.push(eq('v', `${V('v')} Vitesse : v = <b>${fmt(Math.hypot(s.vx, s.vy), 2)} m/s</b>`, 'Flèche grise en pointillés : la vitesse n\'est PAS une force. Sa direction change, le poids ne change pas.'));
   R.push(eq(null, `Position : x = <b>${fmt(s.x, 2)} m</b> · y = <b>${fmt(s.y, 2)} m</b> · t = ${fmt(QS.t, 2)} s`, 'Origine au pied du point de lancement.'));
   R.push(eq(null, `Hauteur maximale H = <b>${fmt(F.H, 2)} m</b> · portée = <b>${fmt(F.R, 2)} m</b> · durée = <b>${fmt(F.tf, 2)} s</b>`, c ? `Sans air, on aurait : portée ${fmt(projFlight(0).R, 2)} m, hauteur maximale ${fmt(projFlight(0).H, 2)} m.` : 'La masse n\'intervient pas : toutes les balles suivent la même trajectoire.'));
   if (isAdv()) {
     const th = q.type === 'vertical' ? 90 : q.type === 'chute' ? 0 : q.theta;
-    R.push(eq('vx', `v<sub>x</sub> = v₀·cos θ = ${fmt(q.v0, 1)} × cos ${th}° = <b>${fmt(v0.x, 2)} m/s</b> (constante)`, 'Pas de force horizontale : mouvement horizontal uniforme.'));
+    R.push(eq('vx', `v<sub>x</sub> = v₀·cos θ = ${q.type === 'chute' ? fmt(q.v0, 1) : ed('proj.v0', q.v0, 1)} × cos ${q.type === 'oblique' ? ed('proj.theta', th, 0) : th}° = <b>${fmt(v0.x, 2)} m/s</b> (constante)`, 'Pas de force horizontale : mouvement horizontal uniforme.'));
     R.push(eq('vy', `v<sub>y</sub> = v₀·sin θ − g·t = <b>${fmt(s.vy, 2)} m/s</b>`, 'Le poids fait varier uniquement la vitesse verticale.'));
     R.push(eq(null, `x(t) = v₀·cos θ·t ; y(t) = −½·g·t² + v₀·sin θ·t + h₀`, c ? 'Équations horaires du cas idéal (sans air) ; avec l\'air, la trajectoire réelle est plus courte.' : 'Équations horaires (frottements de l\'air négligés).'));
     R.push(eq(null, `H = h₀ + (v₀·sin θ)² / (2g) = <b>${fmt(F.H, 2)} m</b>`, 'Au sommet, v<sub>y</sub> = 0.'));
@@ -5926,9 +5947,10 @@ function updateReadouts() {
     st = QS.landed ? 'Au sol.' : QS.t === 0 ? 'Prêt : appuyer sur ▶ Lecture.' : (airC() > 0 ? 'En vol : le poids et le frottement de l\'air agissent.' : 'En vol : seul le poids agit.');
     $('#readout').textContent = `t = ${fmt(QS.t, 2)} s · x = ${fmt(s.x, 1)} m · y = ${fmt(s.y, 1)} m`;
   }
+  html += '<p class="note">Les données <span class="ed" style="cursor:default">soulignées</span> se modifient d\'un clic dans l\'équation.</p>';
   if (S.bt === 'bilan') html = bilanHTML(); else if (S.bt === 'doi') html = doiHTML();
-  const box = $('#eqs'); box.innerHTML = html;
-  if (S.hl) box.querySelectorAll(`[data-k="${S.hl}"]`).forEach(e => e.classList.add('hl'));
+  const box = $('#eqs'); if (!S.editing && box.dataset.h !== html) { box.innerHTML = html; box.dataset.h = html; }   // pas de mise à jour pendant la saisie d'une valeur
+  box.querySelectorAll('[data-k]').forEach(e => e.classList.toggle('hl', !!S.hl && e.dataset.k === S.hl));
   const se = $('#status'); se.textContent = evtMsg || st; se.classList.toggle('evt', !!evtMsg);
   $('#fiche').innerHTML = ficheHTML(); renderAnch();
   $('#warn').textContent = warnMsg; $('#mtag').textContent = ['', 'Niveau 1 · Forces', 'Niveau 2 · Valeurs', 'Niveau 3 · Analyse'][S.level];
@@ -6130,8 +6152,9 @@ function planPanel() {
       p.alpha > 0 ? [quick((veh ? [[5, '5°'], [10, '10°'], [15, '15°']] : [[15, '15°'], [30, '30°'], [45, '45°']]), p.alpha, v => { p.alpha = v; p.s0 = null; paramChanged(true); }),
         sliderRow({ label: 'Angle d\'inclinaison α', min: 1, max: O.aMax, step: 1, value: p.alpha, dig: 0, unit: '°', hint: veh ? 'au-delà de 20° (≈ 36 %), une route n\'est plus praticable' : null, on: v => { p.alpha = v; p.s0 = null; paramChanged(); }, end: () => renderPanel() })] : null),
     sec(4, 'Frottements', veh ? 'Choisir l\'état de la route.' : 'Choisir la surface du support.',
-      fricRow(veh ? 'Frottements de la route' : 'Frottements du support', sl, p.surf, id => { p.surf = id; paramChanged(true); }, c => adv && c.mu !== null ? ` (μ = ${fmt(c.mu, 2)})` : ''),
-      (sCur.mu === null && adv) ? sliderRow({ label: 'Coefficient de frottement μ', min: 0, max: sCur.max, step: 0.01, value: p.muPerso, dig: 2, unit: '', on: v => { p.muPerso = v; paramChanged(); } }) : null),
+      fricRow(veh ? 'Frottements de la route' : 'Frottements du support', sl, p.surf, id => { p.surf = id; paramChanged(true); }, c => adv && c.mu !== null && c.mu > 0 ? (veh ? ` (μ = ${fmt(c.mu, 2)})` : ` (μ adhérence = ${fmt(c.muS, 2)} ; μ glissement = ${fmt(c.mu, 2)})`) : ''),
+      (sCur.mu === null && adv && !veh) ? sliderRow({ label: 'Coefficient d\'adhérence μa (au départ)', min: 0, max: sCur.max, step: 0.01, value: Math.max(p.muPersoS ?? p.muPerso, p.muPerso), dig: 2, unit: '', hint: 'toujours au moins égal à μg', on: v => { p.muPersoS = v; if (p.muPerso > v) p.muPerso = v; paramChanged(); }, end: () => renderPanel() }) : null,
+      (sCur.mu === null && adv) ? sliderRow({ label: veh ? 'Coefficient de frottement μ' : 'Coefficient de glissement μg (pendant le glissement)', min: 0, max: sCur.max, step: 0.01, value: p.muPerso, dig: 2, unit: '', on: v => { p.muPerso = v; if (!veh && (p.muPersoS ?? 0) < v) p.muPersoS = v; paramChanged(); } }) : null),
     departCard(), displayCard()];
 }
 function clampRes() {
@@ -6181,7 +6204,7 @@ function projPanel() {
 }
 function applySit(tab, id) {
   if (S.tab === tab) resetSteps();
-  if (tab === 'plan') { const s = SIT_PLAN.find(x => x.id === id); Object.assign(S.plan, { v0: 3, vc: 3, muPerso: 0.3, sens: 1, Fp: 20, dur: 1, perm: false, s0: null }, s.p, { sit: 'standard', sitId: id }); if (HAS3D) buildWedge(); }
+  if (tab === 'plan') { const s = SIT_PLAN.find(x => x.id === id); Object.assign(S.plan, { v0: 3, vc: 3, muPerso: 0.3, muPersoS: 0.5, sens: 1, Fp: 20, dur: 1, perm: false, s0: null }, s.p, { sit: 'standard', sitId: id }); if (HAS3D) buildWedge(); }
   else if (tab === 'ressort') { const s = SIT_RES.find(x => x.id === id), prev = S.res.orient; Object.assign(S.res, s.p, { sit: 'standard', sitId: id, orient: s.o }); if (s.p.dl0 === 'eq') S.res.dl0 = dlEq(); if (HAS3D && prev !== s.o) buildResScene(); }
   else { const s = SIT_PROJ.find(x => x.id === id); Object.assign(S.proj, { air: 'aucun' }, s.p, { sit: 'standard', sitId: id }); }
   if (S.tab === tab) { cameraDefaults(); paramChanged(true); }
@@ -6277,8 +6300,8 @@ function updateTriScore() { $('#triScore').textContent = `Trouvées : ${triState
    DÉFIS
    ===================================================================== */
 const DEFIS = [
-  { q: 'Un cube est posé sans vitesse sur une pente en bois de 15° (μ = 0,30). Que fait-il ?', o: ['Il glisse vers le bas', 'Il reste immobile', 'Il roule'], ok: 1,
-    x: 'tan 15° ≈ 0,27 ≤ 0,30 : le frottement d\'adhérence suffit. Les forces se compensent, le cube reste immobile.', pre: { tab: 'plan', p: { obj: 'cube', m: 2, alpha: 15, surf: 'moyen', mvt: 'lacher' } } },
+  { q: 'Un cube est posé sans vitesse sur une pente en bois de 15° (coefficient d\'adhérence μa = 0,50). Que fait-il ?', o: ['Il glisse vers le bas', 'Il reste immobile', 'Il roule'], ok: 1,
+    x: 'tan 15° ≈ 0,27 ≤ 0,50 : le frottement d\'adhérence suffit. Les forces se compensent, le cube reste immobile.', pre: { tab: 'plan', p: { obj: 'cube', m: 2, alpha: 15, surf: 'moyen', mvt: 'lacher' } } },
   { q: 'Sans frottement, sur une pente de 30°, on remplace un cube de 2 kg par un cube de 4 kg. Son accélération…', o: ['double', 'reste la même', 'est divisée par deux'], ok: 1,
     x: 'Sans frottement, a = g·sin α : la masse n\'intervient pas.', pre: { tab: 'plan', p: { obj: 'cube', m: 4, alpha: 30, surf: 'aucun', mvt: 'lacher' } } },
   { q: 'Une main pousse un cube sur une table SANS frottement pendant 1 s, puis le lâche. Ensuite, le cube…', o: ['s\'arrête aussitôt', 'ralentit puis s\'arrête', 'continue à vitesse constante'], ok: 2,
@@ -6389,6 +6412,104 @@ function signaler() {
   window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
 }
 function toggleKeys(on) { const k = $('#keys'); k.hidden = on === undefined ? !k.hidden : !on; }
+/* ---------- Valeurs modifiables dans les équations (données seulement, jamais les résultats) ---------- */
+function edLim(path) {
+  const p = S.plan;
+  return { 'plan.m': [OBJ[p.obj].mMin, OBJ[p.obj].mMax, OBJ[p.obj].mStep], 'plan.alpha': [0, OBJ[p.obj].aMax, 1], 'res.m': [0.1, S.res.orient === 'h' ? 2 : mMaxVert(), 0.05],
+    'res.k': [5, 300, 5], 'proj.m': [0.05, 5, 0.05], 'proj.v0': [1, 30, 0.5], 'proj.theta': [0, 90, 1] }[path];
+}
+function ed(path, v, dig) { return `<span class="ed" data-p="${path}" data-dig="${dig}" tabindex="0" role="button" title="Cliquer pour modifier cette valeur">${fmt(v, dig)}</span>`; }
+function editValue(span) {
+  const path = span.dataset.p, [tab, key] = path.split('.'), [mn, mx, st] = edLim(path), stt = S[tab];
+  const inp = h('input', { type: 'number', class: 'edin', min: mn, max: mx, step: st, value: stt[key], inputmode: 'decimal', 'aria-label': 'Nouvelle valeur' });
+  S.editing = true; span.replaceWith(inp); inp.focus(); inp.select();
+  let done = false;
+  const finish = ok => {
+    if (done) return; done = true; S.editing = false;
+    const v = parseFloat(String(inp.value).replace(',', '.'));
+    if (ok && isFinite(v)) {
+      const val = Math.round(clamp(v, mn, mx) / st) * st, nv = +val.toFixed(4);
+      if (nv !== stt[key]) {
+        markLibre(); stt[key] = nv;
+        if (path === 'res.k') stt.kp = 'libre';
+        if (path === 'plan.alpha') { stt.s0 = null; if (HAS3D) buildWedge(); }
+        if (Math.abs(nv - v) > 1e-9) toast(`Valeur ramenée à ${fmt(nv, +span.dataset.dig)} (plage : ${fmt(mn, +span.dataset.dig)} à ${fmt(mx, +span.dataset.dig)}).`);
+        paramChanged(true); return;
+      }
+    }
+    updateReadouts();
+  };
+  inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') finish(true); else if (e.key === 'Escape') finish(false); });
+  inp.addEventListener('blur', () => finish(true));
+}
+
+/* ---------- Message bref en bas de l'écran ---------- */
+let toastT = 0;
+function toast(msg, ms = 3500) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, ms); }
+
+/* ---------- Lien de partage : les réglages de l'onglet sont codés dans l'adresse (#e=…) ---------- */
+const SITE = 'https://oumarmaiil-oss.github.io/atelierforces/';
+const TABKEY = { plan: 'plan', ressort: 'res', proj: 'proj' };
+const b64u = str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = str => decodeURIComponent(escape(atob(str.replace(/-/g, '+').replace(/_/g, '/'))));
+function shareURL() {
+  const base = /^https?:/.test(location.protocol) ? location.origin + location.pathname : SITE;   // hors ligne : lien vers le site
+  const t = simTab() ? S.tab : 'plan', st = { ...S[TABKEY[t]] }; delete st.s0;
+  return base + '#e=' + b64u(JSON.stringify({ v: 1, t, l: S.level, g: S.g, s: st }));
+}
+function linkState() {
+  const m = location.hash.match(/#e=([\w-]+)/); if (!m) return null;
+  try { const o = JSON.parse(unb64u(m[1])); return TABKEY[o.t] && o.s ? o : null; } catch (e) { return null; }
+}
+async function partager() {
+  const url = shareURL(), title = 'L\'Atelier des Forces 3D';
+  if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ title, text: 'Expérience de l\'Atelier des Forces', url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(url); toast('Lien copié : il suffit de le coller dans WhatsApp ou un message.'); }
+  catch (e) { toast('Lien de l\'expérience : ' + url, 12000); }
+}
+
+/* ---------- Image de la scène : rendu 3D + traits de rappel + étiquettes redessinées ---------- */
+function rrect(x, X, Y, W, H, r) { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); }
+async function capture() {
+  if (!renderer || !simTab()) { toast('L\'image se fait depuis un onglet de simulation.'); return; }
+  if (S.tab === 'plan') planVisual(); else if (S.tab === 'ressort') resVisual(); else projVisual();
+  updateCamera(); renderer.render(scene, curCam()); updateLabels();
+  const cv = renderer.domElement, W = cv.clientWidth, H = cv.clientHeight, k = cv.width / W;
+  const out = document.createElement('canvas'); out.width = cv.width; out.height = cv.height;
+  const x = out.getContext('2d'); x.drawImage(cv, 0, 0); x.scale(k, k);
+  const vr = $('#view').getBoundingClientRect();
+  try {   // traits de rappel (SVG)
+    const svg = $('#leaders').cloneNode(true); svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); svg.setAttribute('width', W); svg.setAttribute('height', H);
+    const img = new Image(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.outerHTML);
+    await img.decode(); x.drawImage(img, 0, 0, W, H);
+  } catch (e) { }
+  for (const el of document.querySelectorAll('#labels .flab')) {
+    if (el.style.display === 'none' || !el.offsetWidth) continue;
+    const r = el.getBoundingClientRect(), cs = getComputedStyle(el), X = r.left - vr.left, Y = r.top - vr.top;
+    const col = cs.color, bw = parseFloat(cs.borderTopWidth) || 0, bg = cs.backgroundColor;
+    x.globalAlpha = +cs.opacity || 1;
+    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') { rrect(x, X, Y, r.width, r.height, 8); x.fillStyle = bg; x.fill(); }
+    if (bw) { rrect(x, X + bw / 2, Y + bw / 2, r.width - bw, r.height - bw, 7); x.strokeStyle = cs.borderTopColor; x.lineWidth = bw; if (cs.borderTopStyle === 'dashed') x.setLineDash([5, 4]); x.stroke(); x.setLineDash([]); }
+    x.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; x.textBaseline = 'middle'; x.fillStyle = col;
+    let tx = X + (parseFloat(cs.paddingLeft) || 0) + bw;
+    const sw = el.querySelector('.sw');
+    if (sw) { const q = sw.getBoundingClientRect(); x.fillStyle = sw.style.background; x.fillRect(q.left - vr.left, q.top - vr.top, q.width, q.height); tx = q.right - vr.left + 6; x.fillStyle = col; }
+    x.fillText(el.innerText.replace(/\s+/g, ' ').trim(), tx, Y + r.height / 2 + 1);
+    const vec = el.querySelector('.vec');   // petite flèche au-dessus du symbole du vecteur
+    if (vec) { const q = vec.getBoundingClientRect(), y0 = q.top - vr.top + 2, x0 = q.left - vr.left + 1, x1 = q.left - vr.left + Math.min(q.width, 12);
+      x.strokeStyle = col; x.lineWidth = 1.5; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y0); x.lineTo(x1 - 4, y0 - 3); x.moveTo(x1, y0); x.lineTo(x1 - 4, y0 + 3); x.stroke(); }
+    x.globalAlpha = 1;
+  }
+  // titre de la situation, en haut à gauche
+  x.font = '800 15px system-ui,sans-serif'; const tt = $('#infoT').textContent, tw = x.measureText(tt).width;
+  rrect(x, 10, 10, tw + 22, 32, 9); x.fillStyle = 'rgba(10,16,30,.93)'; x.fill(); x.fillStyle = '#f1f5f9'; x.textBaseline = 'middle'; x.fillText(tt, 21, 27);
+  out.toBlob(b => {
+    const a = document.createElement('a'), d = new Date(), p2 = n => String(n).padStart(2, '0');
+    a.href = URL.createObjectURL(b); a.download = `atelier-forces_${S.tab}_${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}_${p2(d.getHours())}h${p2(d.getMinutes())}.png`;
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast('Image enregistrée dans vos téléchargements.');
+  }, 'image/png');
+}
 /* Mémorise les derniers réglages dans ce navigateur (rien n'est envoyé ailleurs). */
 const STORE = 'atelierForces.v1';
 function saveState() { try { localStorage.setItem(STORE, JSON.stringify({ level: S.level, g: S.g, tab: S.tab, plan: S.plan, res: S.res, proj: S.proj, show: S.show, autoPause: S.autoPause, z: S.z })); } catch (e) { } }
@@ -6413,6 +6534,8 @@ function bindUI() {
   document.querySelectorAll('#viewSeg button').forEach(b => b.onclick = () => setView(b.dataset.view));
   document.querySelectorAll('#eqTabs button').forEach(b => b.onclick = () => { S.bt = b.dataset.bt; document.querySelectorAll('#eqTabs button').forEach(x => x.classList.toggle('on', x === b)); updateReadouts(); });
   const eqs = $('#eqs');
+  eqs.addEventListener('pointerdown', e => { const sp = e.target.closest('.ed'); if (sp && sp.dataset.p) { e.preventDefault(); editValue(sp); } });
+  eqs.addEventListener('keydown', e => { const sp = e.target.closest('.ed'); if (sp && sp.dataset.p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); editValue(sp); } });
   eqs.addEventListener('mousemove', e => { const t = e.target.closest('[data-k]'); S.hl = t ? t.dataset.k : null; });
   eqs.addEventListener('mouseleave', () => S.hl = null);
   $('#btnPlay').onclick = () => {
@@ -6434,6 +6557,8 @@ function bindUI() {
   $('#btnPanel').onclick = () => { S.panel = !S.panel; $('#simView').classList.toggle('collapsed', !S.panel); setTimeout(resize, 50); };
   $('#fsBtn').onclick = () => toggleProj();
   $('#btnSignal').onclick = () => signaler();
+  $('#btnShot').onclick = () => capture();
+  $('#btnShare').onclick = () => partager();
   document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('projecting')) toggleProj(false, true); });
   /* Raccourcis clavier (professeur au tableau). Liste affichée avec « ? ». */
   document.addEventListener('keydown', e => {
@@ -6455,6 +6580,7 @@ function bindUI() {
     else if (k === 'l') $('#legend').classList.toggle('mini');
     else if (k === 'p') $('#btnPanel').click();
     else if (k === 'f') toggleProj();
+    else if (k === 'c') capture();
   });
   $('#btnKeys').onclick = () => toggleKeys();
   $('#keys').onclick = e => { if (e.target === $('#keys') || e.target.closest('.kclose')) toggleKeys(false); };
@@ -6464,7 +6590,13 @@ function start() {
   if (HAS3D) { try { init3D(); } catch (err) { console.error(err); } }
   else $('#view').append(h('div', { id: 'noThree', html: '<div><b>La 3D n\'a pas pu être chargée.</b><br>Three.js se télécharge depuis Internet : vérifiez la connexion puis rechargez la page.<br>Les équations, le bilan, l\'atelier de tri et les défis restent utilisables.</div>' }));
   if (HAS3D && resG) { buildResScene(); resG.visible = false; }
-  const d = loadState();
+  let d = loadState(); const L = linkState();
+  if (L) {   // lien partagé : il prime sur les réglages mémorisés
+    d = d && d.plan && d.res && d.proj ? d : { plan: { ...S.plan }, res: { ...S.res }, proj: { ...S.proj }, show: {} };
+    const key = TABKEY[L.t]; d[key] = { ...d[key], ...L.s }; d.tab = L.t; d.level = L.l; d.g = L.g;
+    history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(() => toast('Expérience partagée chargée : appuyer sur ▶ Lecture.'), 600);
+  }
   if (d && d.plan && d.res && d.proj) {   // on reprend là où le professeur s'était arrêté
     Object.assign(S.plan, d.plan, { s0: null }); Object.assign(S.res, d.res); Object.assign(S.proj, d.proj); Object.assign(S.show, d.show || {});
     if (!surfList().some(x => x.id === S.plan.surf)) S.plan.surf = 'aucun';
