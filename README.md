@@ -28,7 +28,7 @@ Laboratoire virtuel interactif de sciences physiques (collège · lycée) pour c
 
 ## Niveaux d'affichage
 
-**1 · Forces** (flèches et noms, pour identifier les forces) · **2 · Valeurs** (valeurs en newtons et équations) · **3 · Analyse** (composantes du poids, réaction normale et frottement, μ, deuxième loi de Newton). Le bouton **Une par une** de la légende (touche S) montre les forces l'une après l'autre ; un clic sur une force de la légende l'isole.
+**1 · Découvrir** (flèches et noms, pour identifier les forces) · **2 · Comprendre** (valeurs en newtons et équations) · **3 · Expert** (composantes du poids, réaction normale et frottement, μ, deuxième loi de Newton). Le bouton **Une par une** de la légende (touche S) montre les forces l'une après l'autre ; un clic sur une force de la légende l'isole.
 
 ## Lecture des forces
 
@@ -55,3 +55,7 @@ Ordinateur, vidéoprojecteur, tablette et téléphone (portrait ou paysage) : su
 ## Licence
 
 [MIT](LICENSE) — © 2026 Dr Oumar Sow. Réutilisation et contributions bienvenues.
+
+## En-tête commun aux trois ateliers
+
+Comme [L'Atelier Cosmique](https://oumarmaiil-oss.github.io/ateliercosmique/) et [L'Atelier Optique](https://oumarmaiil-oss.github.io/atelieroptique/) : niveaux **1 · Découvrir**, **2 · Comprendre**, **3 · Expert** ; **profil d'affichage** Complet, Équilibré ou Léger, choisi selon l'appareil ; sélecteur **2D | 3D** au début de la barre de commandes (touche D) ; bouton **Ateliers** pour passer d'un atelier à l'autre ; bouton **ⓘ À propos** (le projet, la licence et les droits, la confidentialité).

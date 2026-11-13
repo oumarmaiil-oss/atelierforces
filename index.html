@@ -4401,6 +4401,19 @@ details.sec .body{padding:2px 14px 14px}
 .brk{display:none}
 #keys{position:fixed;inset:0;z-index:2000;background:rgba(2,4,11,.7);display:grid;place-items:center;padding:16px}
 #keys[hidden]{display:none}
+.adlg{position:fixed;inset:0;z-index:2000;background:rgba(2,4,11,.7);display:grid;place-items:center;padding:16px}
+.adlg[hidden]{display:none}
+.adlg .kbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;max-width:min(760px,94vw);width:100%;max-height:100%;overflow:auto}
+.adlg h3{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;font-size:17px}
+.about{display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.55}
+.about h4{margin:0 0 4px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.about p{margin:0 0 6px}.about .note{font-size:12.5px;color:var(--muted)}.about a{color:var(--accent)}
+.atl{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
+.atc{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--panel2);color:var(--ink);text-decoration:none}
+.atc b{font-size:14.5px}.atc span{font-size:12.5px;color:var(--muted)}.atc em{font-style:normal;font-size:12px;color:var(--accent);margin-top:auto}
+a.atc:hover{border-color:var(--accent)}.atc.here{border-color:var(--accent);background:var(--accent-soft)}
+@media (max-width:1560px){#btnAteliers span,#profLbl{display:none}}
+@media (max-width:1260px){ .hctl{gap:6px} #btnKeys{display:none} .top .hbtn{padding-left:7px;padding-right:7px} }
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2100;background:#101a33;border:1px solid #3b4a7a;color:#e2e8f0;border-radius:12px;padding:10px 14px;font-weight:700;max-width:min(92vw,560px);box-shadow:0 10px 30px rgba(0,0,0,.5);word-break:break-all}
 #toast[hidden]{display:none}
 #keys .kbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;max-width:460px;width:100%;max-height:100%;overflow:auto}
@@ -4607,9 +4620,9 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
   <div class="hctl" id="hctl">
   <div class="lvl" title="Niveau d'affichage : ce que montrent la scène et les équations">Niveau
   <div class="seg" id="modeSeg">
-    <button data-level="1" title="Niveau 1 : les forces seulement (flèches et noms), pour les identifier">1 · Forces</button>
-    <button data-level="2" class="on" title="Niveau 2 : les forces et leurs valeurs, avec les équations">2 · Valeurs</button>
-    <button data-level="3" title="Niveau 3 : analyse (composantes du poids, réaction normale et frottement, μ, deuxième loi de Newton)">3 · Analyse</button>
+    <button data-level="1" title="Niveau 1 : les forces seulement (flèches et noms), pour les identifier">1 · Découvrir</button>
+    <button data-level="2" class="on" title="Niveau 2 : les forces et leurs valeurs, avec les équations">2 · Comprendre</button>
+    <button data-level="3" title="Niveau 3 : analyse (composantes du poids, réaction normale et frottement, μ, deuxième loi de Newton)">3 · Expert</button>
   </div></div>
   <label class="gbox" title="Intensité de la pesanteur g : poids d'un objet de 1 kg">Pesanteur g
     <select id="gSel">
@@ -4618,6 +4631,7 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
       <option value="1.6">Lune — 1,6 N/kg</option>
     </select>
   </label>
+  <button class="hbtn" id="btnLight" title="Profil d'affichage, choisi automatiquement selon l'appareil : Complet, Équilibré ou Léger. Cliquer pour changer."><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="12" rx="2"/><path d="M8 21h8M12 15v6"/></svg><span id="profLbl">Équilibré</span></button>
   <button class="hbtn" id="btnZm" title="Réduire les textes">A−</button>
   <button class="hbtn" id="btnZp" title="Agrandir les textes">A+</button>
   <div class="seg" id="langSeg" title="Langue / Language"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
@@ -4625,6 +4639,8 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
   <button class="hbtn" id="btnShot" title="Enregistrer une image de la scène (touche C)"><svg class="ic" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Image</span></button>
   <button class="hbtn" id="btnShare" title="Partager un lien qui ouvre cette expérience avec les mêmes réglages"><svg class="ic" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg><span>Lien</span></button>
   <button class="hbtn" id="btnSignal" title="Signaler une erreur par WhatsApp (le message contient la situation affichée)"><svg class="ic" viewBox="0 0 24 24"><path d="M4 21V4h11l1 2h4v9h-7l-1-2H6"/></svg><span>Signaler une erreur</span></button>
+  <button class="hbtn" id="btnAteliers" title="Les autres ateliers de la collection"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Ateliers</span></button>
+  <button class="hbtn" id="btnAbout" title="À propos : le projet, la licence et les droits" aria-label="À propos"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg></button>
   <button class="hbtn" id="btnPanel" title="Masquer / afficher le panneau de réglages"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
   </div>
 </header>
@@ -4639,6 +4655,27 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
 </nav>
 
 <div id="toast" role="status" aria-live="polite" hidden></div>
+<div id="about" class="adlg" hidden role="dialog" aria-label="À propos"><div class="kbox">
+  <h3>À propos de L'Atelier des Forces <button class="kclose hbtn" aria-label="Fermer">✕</button></h3>
+  <div class="about">
+    <section><h4>Le projet</h4>
+      <p>L'Atelier des Forces fait partie d'une collection de laboratoires virtuels de sciences physiques, gratuits et libres : L'Atelier des Forces, L'Atelier Cosmique et L'Atelier Optique. Ils sont conçus au Sénégal par le Dr Oumar Sow, pharmacien, pour les élèves du collège et du lycée, leurs professeurs et toute personne curieuse.</p>
+      <p>Le principe est le même partout : voir et manipuler ce que le manuel décrit. On part d'un exemple tout prêt, on change les réglages, on observe, puis on passe du récit (niveau Découvrir) aux preuves (Comprendre) et aux formules (Expert). Chaque atelier tient dans un seul fichier, fonctionne sans connexion et se partage par WhatsApp ou clé USB.</p>
+      <p class="note">Les programmes ont été développés avec l'aide de l'intelligence artificielle Claude (Anthropic), puis vérifiés et testés.</p></section>
+    <section><h4>Les autres ateliers</h4><div class="atl" data-atl></div></section>
+    <section><h4>Licence et droits</h4>
+      <p>Code sous licence MIT, © 2026 Dr Oumar Sow : libre de l'utiliser, de le copier, de le modifier et de le partager, en gardant cette mention. Bibliothèque 3D : three.js (licence MIT, © 2010-2026 three.js authors).</p></section>
+    <section><h4>Confidentialité</h4>
+      <p>Aucune donnée n'est envoyée : pas de compte, pas de publicité, pas de mesure d'audience. Les défis réussis et tes préférences restent sur ton appareil.</p></section>
+    <section><h4>Une erreur, une idée ?</h4>
+      <p>Le bouton « Signaler une erreur » ouvre WhatsApp avec un message qui décrit la situation affichée. Code source : <a translate="no" href="https://github.com/oumarmaiil-oss/atelierforces" target="_blank" rel="noopener">github.com/oumarmaiil-oss/atelierforces</a></p>
+      <p class="note">Version de novembre 2026.</p></section>
+  </div>
+</div></div>
+<div id="ateliers" class="adlg" hidden role="dialog" aria-label="Les ateliers"><div class="kbox">
+  <h3>Les ateliers de la collection <button class="kclose hbtn" aria-label="Fermer">✕</button></h3>
+  <div class="atl" data-atl></div>
+</div></div>
 <div id="keys" hidden role="dialog" aria-label="Raccourcis clavier"><div class="kbox">
   <h3>Raccourcis clavier <button class="kclose hbtn" aria-label="Fermer">✕</button></h3>
   <table>
@@ -4647,14 +4684,43 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
     <tr><td><kbd>R</kbd></td><td>Recommencer depuis le départ</td></tr>
     <tr><td><kbd>T</kbd></td><td>Ralenti (5 fois plus lent)</td></tr>
     <tr><td><kbd>S</kbd></td><td>Force suivante (une force à la fois, puis toutes)</td></tr>
-    <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Niveau : Forces · Valeurs · Analyse</td></tr>
-    <tr><td><kbd>D</kbd></td><td>Vue de profil / vue 3D</td></tr>
+    <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Niveau : Découvrir · Comprendre · Expert</td></tr>
+    <tr><td><kbd>D</kbd></td><td>Vue 2D (de profil) / vue 3D</td></tr>
     <tr><td><kbd>L</kbd></td><td>Réduire / ouvrir la légende</td></tr>
     <tr><td><kbd>P</kbd></td><td>Masquer / afficher le panneau</td></tr>
     <tr><td><kbd>C</kbd></td><td>Enregistrer une image de la scène</td></tr>
     <tr><td><kbd>F</kbd></td><td>Plein écran (<kbd>Échap</kbd> pour revenir)</td></tr>
     <tr><td><kbd>?</kbd></td><td>Afficher cette liste</td></tr>
   </table></div></div>
+<script>
+/* ===== En-tête commun aux trois ateliers : profil d'affichage, ateliers, à propos ===== */
+(function(){
+  const get = (k, d) => { try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } };
+  const put = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+  const auto = () => { const mem = navigator.deviceMemory || 0, cores = navigator.hardwareConcurrency || 0, sw = Math.min(screen.width, screen.height), sl = Math.max(screen.width, screen.height), coarse = matchMedia('(pointer:coarse)').matches;
+    if((mem && mem <= 2) || (cores && cores <= 2) || (coarse && sw < 600 && (!mem || mem < 4))) return 'leger';
+    if(!coarse && sl >= 1280 && (mem >= 8 || (!mem && cores >= 8))) return 'complet'; return 'equilibre'; };
+  let prof = get('af-profile', null); if(!['complet','equilibre','leger'].includes(prof)) prof = auto();
+  const PROF = {complet:['Complet','3D fine (ordinateur récent)'], equilibre:['Équilibré','bon compromis (ordinateur ancien, tablette)'], leger:['Léger','3D allégée (téléphone modeste)']};
+  window.AF_PXR = () => prof === 'leger' ? 1 : prof === 'complet' ? Math.min(2, devicePixelRatio || 1) : Math.min(1.5, devicePixelRatio || 1);
+  const lbl = document.getElementById('profLbl');
+  function setProfile(p, silent){ prof = p; put('af-profile', p); lbl.textContent = PROF[p][0];
+    try{ if(typeof renderer !== 'undefined' && renderer){ renderer.setPixelRatio(window.AF_PXR()); resize(); } }catch(e){}
+    if(!silent && typeof toast === 'function') toast('Profil ' + PROF[p][0] + ' : ' + PROF[p][1] + '.'); }
+  document.getElementById('btnLight').addEventListener('click', () => { const L = ['complet','equilibre','leger']; setProfile(L[(L.indexOf(prof) + 1) % 3]); });
+  setProfile(prof, true);
+  const ATL = [
+    ['forces', "L'Atelier des Forces", 'Plan incliné, ressort, projectiles : les forces de contact et à distance, en 3D.', 'https://oumarmaiil-oss.github.io/atelierforces/'],
+    ['cosmique', "L'Atelier Cosmique", 'Du Big Bang au système solaire : atomes, étoiles, lumière, galaxies, télescopes.', 'https://oumarmaiil-oss.github.io/ateliercosmique/'],
+    ['optique', "L'Atelier Optique", "Lumière, lentilles et miroirs, l'œil et sa correction, ondes et photons.", 'https://oumarmaiil-oss.github.io/atelieroptique/']];
+  document.querySelectorAll('[data-atl]').forEach(box => { box.innerHTML = ATL.map(([k, n, d, u]) => k === 'forces' ? `<div class="atc here"><b>${n}</b><span>${d}</span><em>Tu es ici</em></div>` : `<a class="atc" href="${u}" target="_blank" rel="noopener"><b>${n}</b><span>${d}</span><em>Ouvrir ↗</em></a>`).join(''); });
+  const dlg = id => { const d = document.getElementById(id); d.addEventListener('click', e => { if(e.target === d || e.target.closest('.kclose')) d.hidden = true; }); return d; };
+  const dA = dlg('about'), dT = dlg('ateliers');
+  document.getElementById('btnAbout').addEventListener('click', () => { dA.hidden = false; });
+  document.getElementById('btnAteliers').addEventListener('click', () => { dT.hidden = false; });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape'){ dA.hidden = true; dT.hidden = true; } });
+})();
+</script>
 <main>
   <section class="sim" id="simView">
     <nav id="sheetTabs" aria-label="Volet">
@@ -4670,8 +4736,8 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
         <div class="ov" id="legend"><div class="lhd"><div class="t" id="legT" title="Cliquer pour réduire / agrandir">Légende</div><button class="solo" id="soloBtn" title="Montrer les forces une par une (touche S)">Une par une ▸</button></div><div id="legIn"><div id="legBody"></div><div id="fiche"></div></div></div>
        </div>
         <div id="transport">
-          <div class="seg" id="viewSeg" title="Vue de profil (comme un schéma) ou vue en 3D (pour tourner autour)">
-            <button data-view="profil" class="on">Profil</button>
+          <div class="seg" id="viewSeg" title="Vue 2D, de profil (comme un schéma), ou vue 3D (pour tourner autour) — touche D">
+            <button data-view="profil" class="on" title="Vue 2D, de profil, comme le schéma du cours">2D</button>
             <button data-view="3d">3D</button>
           </div>
           <button class="tb" id="btnReset" title="Recommencer depuis le départ (R)" aria-label="Recommencer"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
@@ -4726,6 +4792,49 @@ kbd{display:inline-block;min-width:24px;text-align:center;padding:2px 7px;border
 <script id="dico-en">
 /* Dictionnaire français → anglais des textes affichés (« # » remplace un nombre). */
 const EN = {
+"# · Découvrir": "# · Discover",
+"# · Comprendre": "# · Understand",
+"# · Expert": "# · Expert",
+"Niveau # · Découvrir": "Level # · Discover",
+"Niveau # · Comprendre": "Level # · Understand",
+"Niveau # · Expert": "Level # · Expert",
+"Niveau : Découvrir · Comprendre · Expert": "Level: Discover · Understand · Expert",
+"Vue 2D, de profil, comme le schéma du cours": "2D side view, like the textbook diagram",
+"Vue 2D, de profil (comme un schéma), ou vue 3D (pour tourner autour) — touche D": "2D side view (like a diagram) or 3D view (to walk around) — key D",
+"Vue 2D (de profil) / vue 3D": "2D view (side) / 3D view",
+"Profil d'affichage, choisi automatiquement selon l'appareil : Complet, Équilibré ou Léger. Cliquer pour changer.": "Display profile, chosen automatically for your device: Full, Balanced or Light. Click to change.",
+"Complet": "Full",
+"Équilibré": "Balanced",
+"Léger": "Light",
+"Profil Complet : 3D fine (ordinateur récent).": "Full profile: detailed 3D (recent computer).",
+"Profil Équilibré : bon compromis (ordinateur ancien, tablette).": "Balanced profile: good compromise (older computer, tablet).",
+"Profil Léger : 3D allégée (téléphone modeste).": "Light profile: lighter 3D (basic phone).",
+"Les autres ateliers de la collection": "The other workshops in the collection",
+"Ateliers": "Workshops",
+"À propos : le projet, la licence et les droits": "About: the project, licence and rights",
+"À propos": "About",
+"Les ateliers": "The workshops",
+"Les ateliers de la collection": "The workshops in the collection",
+"À propos de L'Atelier des Forces": "About The Forces Workshop",
+"Le projet": "The project",
+"Les autres ateliers": "The other workshops",
+"Licence et droits": "Licence and rights",
+"Confidentialité": "Privacy",
+"Une erreur, une idée ?": "A mistake, an idea?",
+"L'Atelier des Forces fait partie d'une collection de laboratoires virtuels de sciences physiques, gratuits et libres : L'Atelier des Forces, L'Atelier Cosmique et L'Atelier Optique. Ils sont conçus au Sénégal par le Dr Oumar Sow, pharmacien, pour les élèves du collège et du lycée, leurs professeurs et toute personne curieuse.": "The Forces Workshop is part of a collection of free and open virtual physics labs: The Forces Workshop, The Cosmic Workshop and The Optics Workshop. They are designed in Senegal by Dr Oumar Sow, a pharmacist, for middle and high school students, their teachers and anyone curious.",
+"Le principe est le même partout : voir et manipuler ce que le manuel décrit. On part d'un exemple tout prêt, on change les réglages, on observe, puis on passe du récit (niveau Découvrir) aux preuves (Comprendre) et aux formules (Expert). Chaque atelier tient dans un seul fichier, fonctionne sans connexion et se partage par WhatsApp ou clé USB.": "The idea is the same everywhere: see and handle what the textbook describes. Start from a ready-made example, change the settings, observe, then move from the story (Discover level) to the evidence (Understand) and the formulas (Expert). Each workshop fits in a single file, works offline and can be shared via WhatsApp or USB stick.",
+"Les programmes ont été développés avec l'aide de l'intelligence artificielle Claude (Anthropic), puis vérifiés et testés.": "The programs were developed with the help of the Claude artificial intelligence (Anthropic), then checked and tested.",
+"Code sous licence MIT, © 2026 Dr Oumar Sow : libre de l'utiliser, de le copier, de le modifier et de le partager, en gardant cette mention. Bibliothèque 3D : three.js (licence MIT, © 2010-2026 three.js authors).": "Code under the MIT licence, © 2026 Dr Oumar Sow: free to use, copy, modify and share, as long as this notice is kept. 3D library: three.js (MIT licence, © 2010-2026 three.js authors).",
+"Aucune donnée n'est envoyée : pas de compte, pas de publicité, pas de mesure d'audience. Les défis réussis et tes préférences restent sur ton appareil.": "No data is sent: no account, no ads, no analytics. Completed challenges and your preferences stay on your device.",
+"Le bouton « Signaler une erreur » ouvre WhatsApp avec un message qui décrit la situation affichée. Code source :": "The “Report an error” button opens WhatsApp with a message describing the situation on screen. Source code:",
+"Version de novembre 2026.": "November 2026 version.",
+"L'Atelier Cosmique": "The Cosmic Workshop",
+"L'Atelier Optique": "The Optics Workshop",
+"Plan incliné, ressort, projectiles : les forces de contact et à distance, en 3D.": "Inclined plane, spring, projectiles: contact and non-contact forces, in 3D.",
+"Du Big Bang au système solaire : atomes, étoiles, lumière, galaxies, télescopes.": "From the Big Bang to the solar system: atoms, stars, light, galaxies, telescopes.",
+"Lumière, lentilles et miroirs, l'œil et sa correction, ondes et photons.": "Light, lenses and mirrors, the eye and its correction, waves and photons.",
+"Tu es ici": "You are here",
+"Ouvrir ↗": "Open ↗",
 "L'Atelier des Forces": "The Forces Workshop",
 "L'Atelier des Forces #D — Contact & À distance": "The Forces Workshop #D — Contact & Non-contact",
 "Contact & À distance — Sciences physiques, collège · lycée": "Contact & Non-contact forces — Physics, middle & high school",
@@ -5684,7 +5793,7 @@ const srgb = t => { t.colorSpace = THREE.SRGBColorSpace; return t; };   // textu
 function init3D() {
   const stage = $('#view');
   renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));   // net en HD / full HD
+  renderer.setPixelRatio(window.AF_PXR ? window.AF_PXR() : Math.min(window.devicePixelRatio || 1, 2));   // net en HD / full HD
   renderer.domElement.className = 'three';
   stage.prepend(renderer.domElement);
   scene = new THREE.Scene();
@@ -6695,7 +6804,7 @@ function updateReadouts() {
   box.querySelectorAll('[data-k]').forEach(e => e.classList.toggle('hl', !!S.hl && e.dataset.k === S.hl));
   const se = $('#status'); se.textContent = evtMsg || st; se.classList.toggle('evt', !!evtMsg);
   $('#fiche').innerHTML = ficheHTML(); renderAnch();
-  $('#warn').textContent = warnMsg; $('#mtag').textContent = ['', 'Niveau 1 · Forces', 'Niveau 2 · Valeurs', 'Niveau 3 · Analyse'][S.level];
+  $('#warn').textContent = warnMsg; $('#mtag').textContent = ['', 'Niveau 1 · Découvrir', 'Niveau 2 · Comprendre', 'Niveau 3 · Expert'][S.level];
 }
 /** Fiche A → B : valeurs au départ (A), à l'instant affiché (B) et variation. */
 function ficheHTML() {
